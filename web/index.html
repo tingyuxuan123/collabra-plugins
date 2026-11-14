@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Collabra 插件市场：人工精选、确定性打包、Ed25519 签名索引。下载 ZIP 后在 Collabra 扩展页安装。"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"
+    />
+    <title>Collabra 插件市场</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./site.css" />
+    <script type="module" src="./catalog.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#catalog">跳到插件目录</a>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Collabra 插件市场首页">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span class="brand-text">Collabra <span>Market</span></span>
+      </a>
+      <nav class="site-nav" aria-label="页面导航">
+        <a href="#catalog">插件目录</a>
+        <a href="#install">安装方法</a>
+        <a href="#trust">签名与安全</a>
+        <a href="https://github.com/tingyuxuan123/collabra-plugins" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow">独立精选 · 无自动抓取</p>
+        <h1 id="hero-title">给 Collabra 的<br />轻量插件目录</h1>
+        <p class="lede">
+          每个版本都经过人工审查、确定性打包与 SHA-256 校验。索引由 Ed25519
+          签名，客户端只信任内置的公钥。这里不执行插件脚本，也不展示虚构的安装量。
+        </p>
+        <div class="hero-badges" role="list">
+          <span role="listitem">人工精选</span>
+          <span role="listitem">Ed25519 签名</span>
+          <span role="listitem">ZIP 自包含</span>
+          <span role="listitem">平台代码 MIT</span>
+        </div>
+      </section>
+
+      <section id="catalog" class="catalog" aria-labelledby="catalog-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Catalog</p>
+            <h2 id="catalog-title">插件目录</h2>
+          </div>
+          <p class="catalog-count" data-catalog-count></p>
+        </div>
+        <div class="catalog-toolbar">
+          <label class="search">
+            <span>搜索</span>
+            <input
+              type="search"
+              data-catalog-search
+              placeholder="名称、说明或标签"
+              autocomplete="off"
+            />
+          </label>
+          <label class="filter">
+            <span>分类</span>
+            <select data-catalog-category>
+              <option value="all">全部</option>
+              <option value="themes">主题外观</option>
+              <option value="agent">Agent 能力</option>
+              <option value="productivity">效率工作流</option>
+              <option value="integrations">外部集成</option>
+              <option value="insights">观测统计</option>
+              <option value="writing">写作翻译</option>
+              <option value="fun">休闲娱乐</option>
+            </select>
+          </label>
+        </div>
+        <p class="catalog-status" data-catalog-status role="status">正在加载目录…</p>
+        <div class="catalog-grid" data-catalog-grid aria-live="polite"></div>
+        <p class="index-meta">
+          <span>签名索引 sequence <strong data-market-sequence>—</strong></span>
+          <span>生成于 <strong data-market-generated>—</strong></span>
+          <span data-signature-state>签名状态未验证</span>
+        </p>
+      </section>
+
+      <section id="install" class="install" aria-labelledby="install-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Install</p>
+            <h2 id="install-title">从 ZIP 安装</h2>
+          </div>
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="step-number">01</span>
+            <h3>下载 ZIP</h3>
+            <p>在上面的目录中选择插件，下载对应版本的 ZIP 包。下载不会自动安装。</p>
+          </li>
+          <li>
+            <span class="step-number">02</span>
+            <h3>在 Collabra 扩展页安装</h3>
+            <p>
+              打开 Collabra 的扩展页面，选择「添加扩展」→「从 ZIP
+              安装」，选中刚下载的文件。请先阅读权限与兼容性摘要。
+            </p>
+          </li>
+          <li>
+            <span class="step-number">03</span>
+            <h3>确认并启用</h3>
+            <p>
+              只有在你确认安装后，插件才会写入应用私有目录。本市场不会使用自定义
+              URL 协议，也不会绕过安装确认。
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="trust" class="trust" aria-labelledby="trust-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Trust</p>
+            <h2 id="trust-title">签名、完整性与边界</h2>
+          </div>
+        </div>
+        <div class="trust-grid">
+          <article>
+            <h3>签名索引</h3>
+            <p>
+              <code>v1/index.json</code> 的原始字节由 Ed25519
+              私钥签名。Collabra 客户端只信任仓库内置的生产公钥，并拒绝更旧的
+              sequence。
+            </p>
+          </article>
+          <article>
+            <h3>版本不可变</h3>
+            <p>
+              同一个 <code>(插件, 版本)</code> 的包字节与兼容性字段一经发布不可修改。
+              修复必须发布新版本；下架只会停止索引，不删除历史 ZIP。每代还保留签名的
+              索引快照与 artifact ledger，用于校验已下架包的哈希和旧版本 README。
+            </p>
+          </article>
+          <article>
+            <h3>有界且不执行</h3>
+            <p>
+              发布流程不执行插件入口、生命周期脚本或 npm install。包必须自包含，
+              拒绝符号链接、硬链接、原生模块、特殊文件与路径越界；最多 5000 个文件、
+              200MB。
+            </p>
+          </article>
+          <article>
+            <h3>诚实的测试范围</h3>
+            <p>
+              插件只在真实验证过的界面上声明 <code>testedSurfaces</code>。
+              调色板可用不等于所有界面已验收；空列表是诚实状态，不是缺失营销文案。
+            </p>
+          </article>
+          <article>
+            <h3>审批边界</h3>
+            <p>
+              CI 只校验结构、权限、打包与签名，不判定插件 tier。标记为「官方精选」需要
+              维护者通过受保护的 main 分支和 CODEOWNERS 审查确认；CI 本身不会自动授予
+              或阻止社区作者自填 tier。
+            </p>
+          </article>
+          <article>
+            <h3>许可证范围</h3>
+            <p>
+              平台代码与内置 Collabra Paper 采用 MIT；第三方插件以目录卡片中显示的各自
+              License 为准，本站的 MIT 徽标不覆盖第三方插件。
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        <strong>Collabra Market</strong> · 独立精选目录 ·
+        <a href="https://github.com/tingyuxuan123/collabra-plugins">源代码与 SPEC</a>
+      </p>
+      <p class="fine">
+        本站只提供目录、下载与说明，不提供账户后台、评分或自动外部抓取。平台代码与
+        Collabra Paper 为 MIT；第三方插件以卡片显示的各自 License 为准，安装前请自行审查。
+      </p>
+    </footer>
+    <noscript>
+      <p class="noscript">
+        目录需要 JavaScript 读取并校验签名索引。你也可以直接查看
+        <a href="./v1/index.json">v1/index.json</a> 或从 GitHub 下载插件包。
+      </p>
+    </noscript>
+  </body>
+</html>

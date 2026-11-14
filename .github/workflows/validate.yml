@@ -1,0 +1,54 @@
+name: Validate market sources
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Unit and security tests
+        run: npm test
+
+      - name: Validate plugin sources
+        run: npm run validate
+
+      - name: Reject committed private keys
+        run: npm run check:secrets
+
+      - name: Fetch signed dist history (read-only)
+        run: |
+          if git ls-remote --exit-code --heads origin dist >/dev/null 2>&1; then
+            git fetch --depth=1 origin dist
+            mkdir -p .dist-history
+            git archive FETCH_HEAD | tar -x -C .dist-history
+          else
+            echo "dist branch does not exist yet; first publication starts at sequence 1"
+          fi
+
+      - name: Build against verified history
+        run: node scripts/build-market.mjs --history .dist-history --out build
+
+      - name: Verify generated artifacts
+        run: node scripts/verify-build.mjs --out build
+
+      - name: Confirm deterministic package bytes
+        run: |
+          node scripts/build-market.mjs --history .dist-history --out build-repeat --now 2000-01-01T00:00:00.000Z
+          node scripts/build-market.mjs --history .dist-history --out build-first --now 2000-01-01T00:00:00.000Z
+          diff -r build-repeat/v1 build-first/v1

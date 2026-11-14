@@ -1,0 +1,8 @@
+# Changes that can alter trust, publication or signing must be reviewed by a maintainer.
+/.github/workflows/ @tingyuxuan123
+/scripts/ @tingyuxuan123
+/market-public-key.pem @tingyuxuan123
+/plugins/ @tingyuxuan123
+/web/ @tingyuxuan123
+/package.json @tingyuxuan123
+/SPEC.md @tingyuxuan123

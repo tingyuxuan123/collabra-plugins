@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "collabra.paper",
+  "name": "Collabra Paper",
+  "version": "1.0.0",
+  "description": "Warm, neutral paper-inspired palettes for Collabra. Palette only; no scripts or styles.",
+  "permissions": [],
+  "contributes": {
+    "themes": [
+      {
+        "id": "paper",
+        "name": "Paper",
+        "path": "themes/paper.json"
+      }
+    ]
+  }
+}

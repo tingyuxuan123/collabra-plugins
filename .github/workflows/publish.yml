@@ -1,0 +1,179 @@
+name: Publish signed market
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: collabra-market-publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build (no secrets)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Unit and security tests
+        run: npm test
+
+      - name: Validate plugin sources
+        run: npm run validate
+
+      - name: Reject committed private keys
+        run: npm run check:secrets
+
+      - name: Fetch signed dist history (read-only)
+        run: |
+          if git ls-remote --exit-code --heads origin dist >/dev/null 2>&1; then
+            git fetch --depth=1 origin dist
+            mkdir -p .dist-history
+            git archive FETCH_HEAD | tar -x -C .dist-history
+          else
+            echo "dist branch does not exist yet; first publication starts at sequence 1"
+          fi
+
+      - name: Build unsigned generation
+        run: node scripts/build-market.mjs --history .dist-history --out build
+
+      - name: Verify generated artifacts
+        run: node scripts/verify-build.mjs --out build
+
+      - name: Upload unsigned generation
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-unsigned
+          path: build
+          if-no-files-found: error
+          retention-days: 7
+
+  sign:
+    name: Sign (private key only in this job)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Fetch signed dist history (read-only)
+        run: |
+          if git ls-remote --exit-code --heads origin dist >/dev/null 2>&1; then
+            git fetch --depth=1 origin dist
+            mkdir -p .dist-history
+            git archive FETCH_HEAD | tar -x -C .dist-history
+          else
+            echo "dist branch does not exist yet; first publication starts at sequence 1"
+          fi
+
+      - name: Download unsigned generation
+        uses: actions/download-artifact@v4
+        with:
+          name: market-unsigned
+          path: build
+
+      - name: Rebuild from reviewed source and compare
+        run: |
+          generated_at="$(node -e "const fs=require('fs');process.stdout.write(JSON.parse(fs.readFileSync('build/v1/index.json','utf8')).generatedAt)")"
+          node scripts/build-market.mjs --history .dist-history --out rebuild --now "$generated_at"
+          diff -r build rebuild
+
+      - name: Sign index and re-verify history
+        env:
+          COLLABRA_MARKET_PRIVATE_KEY: ${{ secrets.COLLABRA_MARKET_PRIVATE_KEY }}
+        run: node scripts/sign-market.mjs --out build --history .dist-history
+
+      - name: Verify signed generation
+        run: node scripts/verify-build.mjs --out build --signed
+
+      - name: Upload signed generation
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-signed
+          path: build
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish dist and Pages
+    needs: sign
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Download signed generation
+        uses: actions/download-artifact@v4
+        with:
+          name: market-signed
+          path: build
+
+      - name: Verify signed generation before publishing
+        run: node scripts/verify-build.mjs --out build --signed
+
+      - name: Read sequence
+        id: meta
+        run: |
+          sequence="$(node -e "const fs=require('fs');const i=JSON.parse(fs.readFileSync('build/v1/index.json','utf8'));process.stdout.write(String(i.sequence))")"
+          echo "sequence=${sequence}" >> "$GITHUB_OUTPUT"
+          echo "Publishing sequence ${sequence}"
+
+      - name: Commit immutable history to dist branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_V1: build/v1
+          SEQUENCE: ${{ steps.meta.outputs.sequence }}
+        run: bash scripts/ci/publish-dist.sh
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,19 @@
+{
+  "name": "collabra-market",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Curated, signed Collabra plugin market and deterministic publisher",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test test/build.test.mjs test/cli.test.mjs test/crypto.test.mjs test/history.test.mjs test/ids.test.mjs test/schema.test.mjs test/site.test.mjs test/source.test.mjs test/workflow.test.mjs test/zip.test.mjs",
+    "validate": "node scripts/validate-source.mjs",
+    "build": "node scripts/build-market.mjs",
+    "sign": "node scripts/sign-market.mjs",
+    "keygen": "node scripts/keygen.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs"
+  }
+}

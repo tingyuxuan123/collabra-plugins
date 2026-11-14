@@ -1,0 +1,19 @@
+# Generated publisher output. Never commit local builds signed with test keys.
+/build/
+/out/
+/.dist-history/
+/.dist-work/
+/node_modules/
+/keys/
+
+# Keys. The pinned production public key is intentionally tracked.
+*.pem
+!market-public-key.pem
+*.key
+*.p12
+*.pfx
+
+# Local state
+.DS_Store
+*.log
+coverage/

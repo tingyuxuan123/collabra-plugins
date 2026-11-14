@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Collabra">
+  <rect width="64" height="64" rx="14" fill="#f7f5f0"/>
+  <path d="M18 16h22a6 6 0 0 1 6 6v30a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4V16Z" fill="#fffdf8" stroke="#c9c0b0" stroke-width="2"/>
+  <path d="M26 27h14M26 35h14M26 43h9" stroke="#5b6b5a" stroke-width="3" stroke-linecap="round"/>
+</svg>
