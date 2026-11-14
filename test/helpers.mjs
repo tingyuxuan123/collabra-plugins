@@ -107,3 +107,55 @@ export function testSign({ out, history, keys }) {
     allowTestKey: true,
   });
 }
+
+/**
+ * 与主客户端 `marketIndex.isMarketCompatible` 同口径的协议筛选（平台命中 +
+ * 三段版本边界 + 结构非法即不兼容）。市场侧测试引用它，避免只测"自己写的另一套规则"。
+ */
+const COMPAT_APP_VERSION = /^(0|[1-9]\d{0,3})\.(0|[1-9]\d{0,3})\.(0|[1-9]\d{0,3})$/;
+const COMPAT_PLATFORMS = ['darwin', 'win32', 'linux'];
+const COMPAT_SURFACES = ['code', 'bot', 'image-studio', 'taskboard', 'design', 'settings'];
+const isRecord = (value) =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+export function parseCompatAppVersion(value) {
+  const match = typeof value === 'string' ? COMPAT_APP_VERSION.exec(value) : null;
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
+}
+
+const compareCompatVersion = (left, right) =>
+  left[0] - right[0] || left[1] - right[1] || left[2] - right[2];
+
+export function isMarketCompatible(raw, { hostVersion, platform } = {}) {
+  if (!isRecord(raw)) return false;
+  if (raw.host !== 'collabra' || raw.apiVersion !== 1) return false;
+  const min = parseCompatAppVersion(raw.minAppVersion);
+  const app = parseCompatAppVersion(hostVersion);
+  if (!min || !app) return false;
+  if (!Array.isArray(raw.platforms) || raw.platforms.length === 0) return false;
+  if (raw.platforms.some((item) => !COMPAT_PLATFORMS.includes(item))) return false;
+  if (!raw.platforms.includes(platform)) return false;
+  if (compareCompatVersion(app, min) < 0) return false;
+  if (raw.maxAppVersion !== undefined) {
+    const max = parseCompatAppVersion(raw.maxAppVersion);
+    if (!max || compareCompatVersion(app, max) > 0) return false;
+  }
+  if (
+    !Array.isArray(raw.testedSurfaces) ||
+    raw.testedSurfaces.some((item) => !COMPAT_SURFACES.includes(item))
+  )
+    return false;
+  return true;
+}
+
+/** 客户端只在这份兼容子集里挑最新版本；这里返回它选中的版本号。 */
+export function latestCompatibleVersion(versions, host) {
+  const compatible = versions.filter((version) => isMarketCompatible(version.compatibility, host));
+  if (compatible.length === 0) return null;
+  return compatible
+    .map((version) => version.version)
+    .sort((left, right) =>
+      compareCompatVersion(parseCompatAppVersion(left), parseCompatAppVersion(right))
+    )
+    .at(-1);
+}

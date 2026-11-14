@@ -8,6 +8,8 @@ import { loadHistory } from '../scripts/lib/history.mjs';
 import {
   copyAllSources,
   fixedNow,
+  isMarketCompatible,
+  latestCompatibleVersion,
   makeKeys,
   readJson,
   repoRoot,
@@ -47,7 +49,26 @@ const PALETTE_KEYS = [
 ];
 const pluginRoot = (id) => join(repoRoot, 'plugins', id);
 const versionDir = (id, version = '1.0.0') => join(pluginRoot(id), 'versions', version);
+const relativeFiles = (dir) =>
+  filesUnder(dir)
+    .map((file) => file.slice(dir.length + 1))
+    .sort();
 const read = (path) => readFileSync(path, 'utf8');
+const OLD_COMPATIBILITY = {
+  host: 'collabra',
+  apiVersion: 1,
+  minAppVersion: '0.2.81',
+  platforms: ['darwin'],
+  testedSurfaces: ['code', 'settings', 'bot'],
+};
+const NEW_COMPATIBILITY = {
+  host: 'collabra',
+  apiVersion: 1,
+  minAppVersion: '0.2.81',
+  platforms: ['darwin', 'win32'],
+  testedSurfaces: ['code', 'settings', 'bot'],
+};
+const VERSIONS = ['1.0.0', '1.0.1'];
 const filesUnder = (dir) => {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -79,13 +100,8 @@ test('两个社区主题包已入库：id/主题键/tier/权限/兼容范围都�
     const version = plugin.versions[0];
     assert.equal(version.version, '1.0.0');
     assert.deepEqual(version.permissions, [], '不能申请任何权限');
-    assert.deepEqual(version.compatibility, {
-      host: 'collabra',
-      apiVersion: 1,
-      minAppVersion: '0.2.81',
-      platforms: ['darwin'],
-      testedSurfaces: ['code', 'settings', 'bot'],
-    });
+    // 已发布的 1.0.0 兼容原值不可回改：历史版本仍只声明 macOS
+    assert.deepEqual(version.compatibility, OLD_COMPATIBILITY);
     const manifest = readJson(join(versionDir(theme.id), 'enso-plugin.json'));
     assert.equal(manifest.id, theme.id);
     assert.equal(manifest.main, undefined);
@@ -102,9 +118,104 @@ test('两个社区主题包已入库：id/主题键/tier/权限/兼容范围都�
   }
 });
 
-test('包内容是完整角色包：素材齐全、引用无误、无脚本无外链', () => {
+test('兼容回归：1.0.1 在 win32 与 darwin 的 0.2.81 可用，linux 与 0.2.80 仍被排除', () => {
+  const { plugins } = loadSourcePlugins(join(repoRoot, 'plugins'));
   for (const theme of THEMES) {
-    const dir = versionDir(theme.id);
+    const plugin = plugins.find((item) => item.id === theme.id);
+    const latest = plugin.versions.at(-1);
+    assert.equal(latest.version, '1.0.1', `${theme.id} 最新版本应是平台修复后的 1.0.1`);
+    assert.deepEqual(latest.permissions, [], '新版本同样零权限');
+    assert.deepEqual(latest.compatibility, NEW_COMPATIBILITY);
+    // 用户投诉的 Windows 场景：0.2.81 Windows 必须能选中 1.0.1
+    assert.equal(
+      isMarketCompatible(latest.compatibility, { platform: 'win32', hostVersion: '0.2.81' }),
+      true,
+      `${theme.id} 在 Windows 0.2.81 上必须可用`
+    );
+    assert.equal(
+      isMarketCompatible(latest.compatibility, { platform: 'darwin', hostVersion: '0.2.81' }),
+      true,
+      `${theme.id} 在 macOS 0.2.81 上必须可用`
+    );
+    assert.equal(
+      isMarketCompatible(latest.compatibility, { platform: 'win32', hostVersion: '0.2.82' }),
+      true,
+      '更高版本仍需可用（没有 maxAppVersion）'
+    );
+    // 不低于市场协议基线：低于 0.2.81 的客户端读不到本市场，保持排除
+    assert.equal(
+      isMarketCompatible(latest.compatibility, { platform: 'darwin', hostVersion: '0.2.80' }),
+      false,
+      `${theme.id} 不应向 0.2.80 声明兼容`
+    );
+    assert.equal(
+      isMarketCompatible(latest.compatibility, { platform: 'win32', hostVersion: '0.2.80' }),
+      false
+    );
+    // 未请求 Linux，不扩大平台声明
+    assert.equal(
+      isMarketCompatible(latest.compatibility, { platform: 'linux', hostVersion: '0.2.81' }),
+      false,
+      `${theme.id} 不应声称支持 Linux`
+    );
+    // 旧版本仍按历史元数据只对 macOS 生效，不会被新平台声明"追溯放大"
+    assert.equal(
+      isMarketCompatible(plugin.versions[0].compatibility, {
+        platform: 'win32',
+        hostVersion: '0.2.81',
+      }),
+      false,
+      '已发布 1.0.0 的 darwin 限制必须保持原样'
+    );
+    // 客户端"挑最新兼容版本"的结果：两个平台都选中 1.0.1
+    for (const platform of ['darwin', 'win32'])
+      assert.equal(
+        latestCompatibleVersion(plugin.versions, { platform, hostVersion: '0.2.81' }),
+        '1.0.1',
+        `${theme.id} 在 ${platform} 上应选到 1.0.1`
+      );
+    assert.equal(
+      latestCompatibleVersion(plugin.versions, { platform: 'linux', hostVersion: '0.2.81' }),
+      null
+    );
+  }
+});
+
+test('1.0.1 是 1.0.0 的复制：CSS/素材/图标逐字节一致，只改清单版本与说明文档', () => {
+  for (const theme of THEMES) {
+    const oldDir = versionDir(theme.id, '1.0.0');
+    const newDir = versionDir(theme.id, '1.0.1');
+    assert.deepEqual(relativeFiles(newDir), relativeFiles(oldDir), `${theme.id} 文件清单必须一致`);
+    for (const file of relativeFiles(oldDir)) {
+      const isDoc = ['enso-plugin.json', 'README.md', 'NOTICE.md'].includes(file);
+      if (isDoc) continue;
+      assert.deepEqual(
+        readFileSync(join(newDir, file)),
+        readFileSync(join(oldDir, file)),
+        `${theme.id} 的 ${file} 必须与 1.0.0 逐字节一致`
+      );
+    }
+    // 清单只允许改 version
+    const oldManifest = readJson(join(oldDir, 'enso-plugin.json'));
+    const newManifest = readJson(join(newDir, 'enso-plugin.json'));
+    assert.equal(newManifest.version, '1.0.1');
+    assert.deepEqual(
+      { ...newManifest, version: oldManifest.version },
+      oldManifest,
+      `${theme.id} 1.0.1 清单除 version 外不能有改动`
+    );
+    // NOTICE 只在末尾追加版本记录，原有来源记录不得改写
+    const oldNotice = read(join(oldDir, 'NOTICE.md')).trimEnd();
+    const newNotice = read(join(newDir, 'NOTICE.md'));
+    assert.ok(newNotice.startsWith(oldNotice), `${theme.id} NOTICE 原有内容必须保持不变`);
+    assert.match(newNotice, /1\.0\.1/);
+    assert.match(newNotice, /逐字节一致/);
+  }
+});
+
+test('包内容是完整角色包：素材齐全、引用无误、无脚本无外链', () => {
+  for (const theme of THEMES) for (const version of VERSIONS) {
+    const dir = versionDir(theme.id, version);
     const cssRaw = read(join(dir, 'themes', `${theme.themeId}.css`));
     // 负向断言只看真实生效的规则，注释里提到的旧写法不算
     const css = cssRaw.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -150,8 +261,8 @@ test('包内容是完整角色包：素材齐全、引用无误、无脚本无�
 });
 
 test('README/NOTICE 只写事实：全局样式授权、无执行无网络、来源固定 commit', () => {
-  for (const theme of THEMES) {
-    const dir = versionDir(theme.id);
+  for (const theme of THEMES) for (const version of VERSIONS) {
+    const dir = versionDir(theme.id, version);
     const readme = read(join(dir, 'README.md'));
     assert.match(readme, /修改界面样式/, '必须写明需要界面样式授权');
     assert.match(readme, /安装本身不会切换主题/, '不能说安装即切换主题');
@@ -159,6 +270,17 @@ test('README/NOTICE 只写事实：全局样式授权、无执行无网络、来
     assert.match(readme, /不发网络请求/, '必须写明不联网');
     assert.match(readme, /紧凑窗口/);
     assert.match(readme, /设置 → 外观 → 主题/, '必须写清怎么选主题');
+    if (version === '1.0.1') {
+      // 兼容范围与验收范围必须分开写，不能把"只视觉验过 macOS"说成"只兼容 macOS"，
+      // 也不能把 Windows 平台筛选验证说成 Windows 界面真机验收
+      assert.match(readme, /兼容范围（市场筛选依据）/, '必须单列兼容范围');
+      assert.match(readme, /验收范围（只写真实做过的）/, '必须单列验收范围');
+      assert.match(readme, /`win32`/, '必须写明 Windows 在兼容范围内');
+      assert.match(readme, /Windows 只验证了包目录结构/, 'Windows 只能写已验证的部分');
+      assert.match(readme, /没有\*\*在 Windows 真机上/, '必须声明未在 Windows 真机验收界面');
+      assert.doesNotMatch(readme, /Windows 界面已实测|Windows 真机验过|Windows 已验收/);
+      assert.match(readme, /视觉验收只在 macOS 真机上/, '视觉验收必须标注平台');
+    }
     const notice = read(join(dir, 'NOTICE.md'));
     assert.match(notice, new RegExp(theme.commit), 'NOTICE 必须写上游固定 commit');
     assert.match(notice, new RegExp(theme.upstream.replace('.', '\\.')));
@@ -192,15 +314,45 @@ test('构建：两个主题包进入索引与 media，paper 字节保持不变',
   assert.equal(paper.icon, undefined, '旧插件不能凭空长出 icon 字段');
   for (const theme of THEMES) {
     const plugin = byId.get(theme.id);
-    assert.equal(plugin.icon, `media/${theme.id}/1.0.0/icon.svg`);
+    // 图标跟随最新发布版本：1.0.1 有自己的版本化 media 路径
+    assert.equal(plugin.icon, `media/${theme.id}/1.0.1/icon.svg`);
+    assert.equal(plugin.readme.path, `readmes/${theme.id}/1.0.1.md`);
+    assert.deepEqual(
+      plugin.versions.map((item) => item.version),
+      VERSIONS,
+      '旧 1.0.0 必须和新 1.0.1 一起留在索引里'
+    );
+    // 旧版本仍按发布时的 darwin/0.2.81 元数据存在，不被新版本"覆盖"
+    assert.deepEqual(plugin.versions[0].compatibility, OLD_COMPATIBILITY);
+    assert.deepEqual(plugin.versions[1].compatibility, NEW_COMPATIBILITY);
+    // 客户端筛选：Windows 与 macOS 的 0.2.81 都选中 1.0.1
+    for (const platform of ['darwin', 'win32'])
+      assert.equal(
+        latestCompatibleVersion(plugin.versions, { platform, hostVersion: '0.2.81' }),
+        '1.0.1',
+        `${theme.id} 在 ${platform} 上必须能选到 1.0.1`
+      );
     const written = join(out, 'v1', plugin.icon);
     assert.deepEqual(
       readFileSync(written),
-      readFileSync(join(versionDir(theme.id), 'icon.svg')),
+      readFileSync(join(versionDir(theme.id, '1.0.1'), 'icon.svg')),
       `${theme.id} 的 media 图标必须与包内 icon.svg 逐字节一致`
     );
-    const zipPath = join(out, 'v1', plugin.versions[0].path);
-    const entries = readZipEntries(readFileSync(zipPath)).map((entry) => entry.path);
+    // 1.0.1 的 ZIP 只允许清单版本与说明文档不同，资源条目必须逐字节等于 1.0.0
+    const oldZip = readZipEntries(readFileSync(join(out, 'v1', plugin.versions[0].path)));
+    const newZip = readZipEntries(readFileSync(join(out, 'v1', plugin.versions[1].path)));
+    assert.deepEqual(
+      newZip.map((entry) => entry.path),
+      oldZip.map((entry) => entry.path),
+      `${theme.id} 1.0.1 ZIP 条目清单必须与 1.0.0 一致`
+    );
+    const oldByPath = new Map(oldZip.map((entry) => [entry.path, entry.data]));
+    for (const entry of newZip) {
+      if (['enso-plugin.json', 'README.md', 'NOTICE.md'].includes(entry.path)) continue;
+      assert.deepEqual(entry.data, oldByPath.get(entry.path), `${theme.id} 的 ${entry.path} 被改动`);
+    }
+    const zipPath = join(out, 'v1', plugin.versions[1].path);
+    const entries = newZip.map((entry) => entry.path);
     assert.ok(entries.includes('icon.svg'), 'ZIP 内必须有 icon.svg');
     assert.ok(entries.includes(`themes/${theme.themeId}.css`));
     assert.ok(entries.some((entry) => entry.startsWith('themes/assets/')));
@@ -209,10 +361,16 @@ test('构建：两个主题包进入索引与 media，paper 字节保持不变',
   testSign({ out, history: join(root, 'none'), keys });
   const ledger = readJson(join(out, 'v1', 'history', '1.ledger.json'));
   for (const theme of THEMES) {
-    const artifact = ledger.artifacts.find((item) => item.pluginId === theme.id);
-    assert.equal(artifact.icon.path, `media/${theme.id}/1.0.0/icon.svg`);
-    assert.equal(artifact.icon.size, readFileSync(join(versionDir(theme.id), 'icon.svg')).length);
-    assert.match(artifact.icon.sha256, /^[0-9a-f]{64}$/);
+    const artifacts = ledger.artifacts.filter((item) => item.pluginId === theme.id);
+    assert.deepEqual(artifacts.map((item) => item.version), VERSIONS);
+    const iconBytes = readFileSync(join(versionDir(theme.id, '1.0.1'), 'icon.svg'));
+    for (const artifact of artifacts) {
+      assert.equal(artifact.icon.path, `media/${theme.id}/${artifact.version}/icon.svg`);
+      assert.equal(artifact.icon.size, iconBytes.length);
+      assert.match(artifact.icon.sha256, /^[0-9a-f]{64}$/);
+    }
+    // 版本化图标各自入账，但字节相同（没有换图）
+    assert.equal(artifacts[0].icon.sha256, artifacts[1].icon.sha256);
   }
   assert.equal(
     ledger.artifacts.find((item) => item.pluginId === 'collabra.paper').icon,
@@ -221,7 +379,7 @@ test('构建：两个主题包进入索引与 media，paper 字节保持不变',
   loadHistory(out, { publicKeyPem: keys.publicPem, allowTestKey: true });
 });
 
-test('生产 dist 快照上增量构建：旧 paper 条目不发生变化', async (t) => {
+test('生产 dist 快照上增量构建：旧包、旧 ledger 与旧图标全部保留', async (t) => {
   const snapshot = process.env.COLLABRA_PROD_HISTORY;
   if (!snapshot) {
     t.skip('设置 COLLABRA_PROD_HISTORY=<dist 只读快照目录> 后运行');
@@ -255,12 +413,53 @@ test('生产 dist 快照上增量构建：旧 paper 条目不发生变化', asyn
   );
   for (const theme of THEMES) {
     const plugin = result.index.plugins.find((item) => item.id === theme.id);
-    assert.equal(plugin.icon, `media/${theme.id}/1.0.0/icon.svg`);
+    const publishedPlugin = published.plugins.find((item) => item.id === theme.id);
+    // 旧 1.0.0 条目（含当时 darwin/0.2.81 的 compatibility 与 ZIP 哈希）原样保留
+    assert.deepEqual(plugin.versions[0], publishedPlugin.versions[0]);
+    assert.deepEqual(plugin.versions[0].compatibility, OLD_COMPATIBILITY);
+    assert.deepEqual(plugin.versions[1].compatibility, NEW_COMPATIBILITY);
+    // 图标跟随最新版本走新的版本化路径，旧版本的 media 图标不删不改
+    assert.equal(plugin.icon, `media/${theme.id}/1.0.1/icon.svg`);
     assert.equal(existsSync(join(out, 'v1', plugin.icon)), true);
+    const oldIcon = `media/${theme.id}/${publishedPlugin.versions.at(-1).version}/icon.svg`;
+    assert.equal(publishedPlugin.icon, oldIcon);
+    assert.deepEqual(
+      readFileSync(join(out, 'v1', oldIcon)),
+      readFileSync(join(snapshot, 'v1', oldIcon)),
+      '旧版本图标必须逐字节保留'
+    );
+    assert.deepEqual(
+      readFileSync(join(out, 'v1', plugin.icon)),
+      readFileSync(join(out, 'v1', oldIcon)),
+      '1.0.1 图标必须与 1.0.0 逐字节一致'
+    );
+    // 客户端筛选：Windows 与 macOS 的 0.2.81 都能看到 1.0.1
+    for (const platform of ['darwin', 'win32'])
+      assert.equal(
+        latestCompatibleVersion(plugin.versions, { platform, hostVersion: '0.2.81' }),
+        '1.0.1'
+      );
   }
-  // 历史文件逐字节复制，签名链条不受影响
+  // 旧 sequence 的 snapshot/ledger 与签名逐字节复制，签名链条不受影响
   assert.deepEqual(
     readFileSync(join(out, 'v1', 'history', `${published.sequence}.ledger.json`)),
     readFileSync(join(snapshot, 'v1', 'history', `${published.sequence}.ledger.json`))
   );
+  for (const name of readdirSync(join(snapshot, 'v1', 'history'))) {
+    if (name.startsWith(`${result.index.sequence}.`)) continue;
+    assert.deepEqual(
+      readFileSync(join(out, 'v1', 'history', name)),
+      readFileSync(join(snapshot, 'v1', 'history', name)),
+      `历史文件 ${name} 必须逐字节保留`
+    );
+  }
+  // 旧包与旧 README 全部逐字节保留
+  for (const plugin of published.plugins)
+    for (const version of plugin.versions) {
+      assert.deepEqual(
+        readFileSync(join(out, 'v1', version.path)),
+        readFileSync(join(snapshot, 'v1', version.path)),
+        `${version.path} 必须逐字节保留`
+      );
+    }
 });
