@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
   "marketId": "collabra",
-  "sequence": 1,
-  "generatedAt": "2026-11-14T04:52:27.787Z",
+  "sequence": 2,
+  "generatedAt": "2026-11-14T04:56:51.779Z",
   "plugins": [
     {
       "id": "collabra.paper",
