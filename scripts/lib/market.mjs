@@ -1,6 +1,7 @@
 import {
   existsSync,
   readFileSync,
+  readdirSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -8,6 +9,8 @@ import {
 import { join, resolve } from 'node:path';
 import {
   MAX_INDEX_BYTES,
+  ICON_EXTENSIONS,
+  MAX_ICON_BYTES,
   MAX_HISTORY_DEPTH,
   MAX_HISTORY_ENTRIES,
   MAX_HISTORY_GENERATIONS,
@@ -88,6 +91,23 @@ function assertHistoricalVersionUnchanged(source, historical, pluginId) {
     );
 }
 
+/** 已发布版本的图标不可替换、不可移除，旧版本也不允许事后补图标。 */
+function assertHistoricalIconUnchanged(source, historical, pluginId) {
+  const before = historical.icon;
+  const next = source.icon;
+  const label = `${pluginId}@${source.version}`;
+  if (!before && next)
+    throw new Error(`${label} 是已发布版本，不能补发图标；请发布新版本`);
+  if (before && !next)
+    throw new Error(`${label} 已发布图标被移除；同版本必须保持图标字节不变`);
+  if (
+    before &&
+    next &&
+    (before.path !== next.path || before.sha256 !== next.sha256 || before.size !== next.size)
+  )
+    throw new Error(`${label} 已发布图标被修改；同版本必须保持图标字节不变`);
+}
+
 function assertReadmeMatches(file, bytes, label) {
   if (!existsSync(file)) return false;
   if (statSync(file).size !== bytes.length || sha256File(file) !== sha256(bytes))
@@ -108,6 +128,7 @@ function buildPluginEntry(plugin, outputV1, historicalPlugin, ledgerArtifacts) {
   );
   const maxHistorical = ledgerForPlugin.at(-1)?.version;
   const versions = [];
+  const iconByVersion = new Map();
   for (const source of plugin.versions) {
     const readmeFile = join(outputV1, readmePath(plugin.id, source.version));
     const historical = ledgerVersions.get(source.version);
@@ -120,6 +141,8 @@ function buildPluginEntry(plugin, outputV1, historicalPlugin, ledgerArtifacts) {
         throw new Error(`${plugin.id}@${source.version} 的 README 已发布内容被修改`);
       if (!assertReadmeMatches(readmeFile, source.readmeBytes, `${plugin.id}@${source.version}`))
         writeFile(readmeFile, source.readmeBytes);
+      assertHistoricalIconUnchanged(source, historical, plugin.id);
+      if (historical.icon) iconByVersion.set(source.version, historical.icon);
       assertHistoricalVersionUnchanged(source, historical, plugin.id);
       versions.push(toVersionEntry(historical));
       continue;
@@ -136,6 +159,19 @@ function buildPluginEntry(plugin, outputV1, historicalPlugin, ledgerArtifacts) {
         throw new Error(`${plugin.id}@${source.version} 目标包已存在且内容不同`);
     } else {
       writeFile(packageFile, source.zip);
+    }
+    if (source.icon) {
+      // 图标字节直接来自不可变 ZIP 里声明的文件，路径按 version 固化
+      writeConsistent(
+        join(outputV1, source.icon.path),
+        source.icon.bytes,
+        `${plugin.id}@${source.version} 图标`
+      );
+      iconByVersion.set(source.version, {
+        path: source.icon.path,
+        sha256: source.icon.sha256,
+        size: source.icon.size,
+      });
     }
     versions.push({
       version: source.version,
@@ -159,6 +195,7 @@ function buildPluginEntry(plugin, outputV1, historicalPlugin, ledgerArtifacts) {
   const readmeBytes = readFileSync(readmeFile);
   if (readmeBytes.length > MAX_README_BYTES) throw new Error(`${plugin.id} README 超过 256KB`);
   const meta = plugin.meta;
+  const icon = iconByVersion.get(latest.version);
   return {
     id: plugin.id,
     name: meta.name,
@@ -171,6 +208,7 @@ function buildPluginEntry(plugin, outputV1, historicalPlugin, ledgerArtifacts) {
     ...(meta.screenshots !== undefined
       ? { screenshots: meta.screenshots.map((shot) => ({ url: shot.url, alt: shot.alt })) }
       : {}),
+    ...(icon ? { icon: icon.path } : {}),
     versions,
     readme: {
       path: readmeRel,
@@ -197,6 +235,12 @@ function verifyIndexArtifacts(v1, index) {
         throw new Error(`README 大小不匹配：${plugin.readme.path}`);
       if (sha256File(path) !== plugin.readme.sha256)
         throw new Error(`README 哈希不匹配：${plugin.readme.path}`);
+    }
+    if (plugin.icon) {
+      const path = join(v1, plugin.icon);
+      if (!existsSync(path)) throw new Error(`索引引用的图标不存在：${plugin.icon}`);
+      // 路径与字节都在 ledger 里做过不可变校验，这里只兜住"索引指向了没写出的文件"
+      if (statSync(path).size <= 0) throw new Error(`图标为空：${plugin.icon}`);
     }
   }
 }
@@ -310,6 +354,34 @@ function writeConsistent(path, bytes, label) {
   writeFile(path, data);
 }
 
+/**
+ * 图标从产物目录读出并记进 ledger：ledger 是签名的权威账本，所以这里必须只认
+ * 磁盘上的真实字节，不能相信索引里的路径字符串。目录里多于一个文件即视为异常。
+ */
+function iconForVersion(v1, pluginId, version) {
+  const dir = join(v1, 'media', pluginId, version);
+  if (!existsSync(dir)) return undefined;
+  if (!statSync(dir).isDirectory()) throw new Error(`图标路径不是目录：media/${pluginId}/${version}`);
+  const files = readdirSync(dir);
+  if (files.length === 0) return undefined;
+  if (files.length > 1)
+    throw new Error(`media/${pluginId}/${version} 只能放一个图标，实际 ${files.length} 个`);
+  const file = files[0];
+  const extension = file.slice(file.lastIndexOf('.') + 1).toLowerCase();
+  if (!file.includes('.') || !ICON_EXTENSIONS.includes(extension))
+    throw new Error(`图标扩展名不合法：media/${pluginId}/${version}/${file}`);
+  const absolute = join(dir, file);
+  if (!statSync(absolute).isFile()) throw new Error(`图标必须是文件：${file}`);
+  const size = statSync(absolute).size;
+  if (size <= 0 || size > MAX_ICON_BYTES)
+    throw new Error(`图标大小不合法：media/${pluginId}/${version}/${file}`);
+  return {
+    path: `media/${pluginId}/${version}/${file}`,
+    sha256: sha256File(absolute),
+    size,
+  };
+}
+
 function artifactForVersion(v1, plugin, version) {
   const readmeRel = readmePath(plugin.id, version.version);
   const readmeFile = join(v1, readmeRel);
@@ -317,6 +389,7 @@ function artifactForVersion(v1, plugin, version) {
   const size = statSync(readmeFile).size;
   if (size <= 0 || size > MAX_README_BYTES)
     throw new Error(`版本 README 大小不合法：${readmeRel}`);
+  const icon = iconForVersion(v1, plugin.id, version.version);
   return {
     pluginId: plugin.id,
     version: version.version,
@@ -330,6 +403,7 @@ function artifactForVersion(v1, plugin, version) {
       sha256: sha256File(readmeFile),
       size,
     },
+    ...(icon ? { icon } : {}),
   };
 }
 
@@ -376,6 +450,14 @@ function assertIndexRespectsLedger(index, history) {
           artifact.readme.size !== plugin.readme.size)
       )
         throw new Error(`${plugin.id} 的 README 与 signed ledger 不一致`);
+    }
+    // 索引里的图标必须指向最新版本在 signed ledger 中固定的那份字节
+    const latestVersion = plugin.versions.at(-1);
+    const latestArtifact = history.artifacts.get(artifactKey(plugin.id, latestVersion.version));
+    if (latestArtifact) {
+      const recorded = latestArtifact.icon?.path;
+      if ((plugin.icon ?? undefined) !== recorded)
+        throw new Error(`${plugin.id} 的图标与 signed ledger 不一致`);
     }
   }
 }

@@ -34,10 +34,18 @@ export const MAX_PACKAGE_DIRECTORIES = 512;
 export const MAX_PACKAGE_ENTRIES = 6000;
 export const MAX_README_BYTES = 256 * 1024;
 export const MAX_MANIFEST_BYTES = 256 * 1024;
+/** 插件图标：只接受包内声明的位图/SVG，单文件上限 512KB。 */
+export const MAX_ICON_BYTES = 512 * 1024;
+export const ICON_EXTENSIONS = ['svg', 'png', 'webp', 'gif', 'jpg', 'jpeg'];
 export const MAX_PLUGIN_ID_LENGTH = 40;
 
 export const packagePath = (id, version) => `packages/${id}/${version}.zip`;
 export const readmePath = (id, version) => `readmes/${id}/${version}.md`;
+/**
+ * 图标在 v1/ 下的安全相对路径。客户端市场列表按同源 https 解析这条路径
+ * （`marketIconUrl`），所以这里必须留在 `media/` 下，不允许外链。
+ */
+export const mediaPath = (id, version, file) => `media/${id}/${version}/${file}`;
 
 /** Client manifest permission vocabulary; the publisher stays closed over it. */
 export const SUPPORTED_PERMISSIONS = [

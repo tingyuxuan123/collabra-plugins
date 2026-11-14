@@ -317,6 +317,39 @@ section {
   gap: 0.5rem;
 }
 
+/* 插件图标：站点 CSP 是 img-src 'self'，只加载本站 v1/media/ 下的同源文件 */
+.plugin-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.75rem 0 0.35rem;
+  min-width: 0;
+}
+
+.plugin-icon {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.6rem;
+  object-fit: contain;
+  background: var(--surface-2, var(--surface));
+  border: 1px solid var(--line);
+}
+
+.plugin-icon.fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--muted, inherit);
+  text-transform: uppercase;
+}
+
+.plugin-heading .plugin-title {
+  margin: 0;
+  min-width: 0;
+}
+
 .tier,
 .category {
   font-family: ui-sans-serif, system-ui, sans-serif;
