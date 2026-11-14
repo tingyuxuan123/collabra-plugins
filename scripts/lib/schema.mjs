@@ -1,7 +1,9 @@
 import {
   HOST,
+  ICON_EXTENSIONS,
   MAX_PACKAGE_BYTES,
   MAX_README_BYTES,
+  mediaPath,
   MARKET_API_VERSION,
   MARKET_CATEGORIES,
   MARKET_ID,
@@ -50,10 +52,34 @@ const PLUGIN_KEYS = [
   'homepage',
   'screenshots',
   'readme',
+  'icon',
   'versions',
 ];
 const README_KEYS = ['path', 'sha256', 'size'];
 const SCREENSHOT_KEYS = ['url', 'alt'];
+
+/**
+ * 可选图标：必须是 `media/<同一个插件 id>/<版本>/<文件名>.<允许扩展名>` 的
+ * 安全相对路径。客户端只按同源 https 解析这条路径，这里也不接受外链、
+ * 绝对路径或 `..`，扩展名白名单与 `ICON_EXTENSIONS` 一致。
+ */
+export function validatePluginIcon(raw, pluginId, version) {
+  if (typeof raw !== 'string' || raw.length === 0 || raw.length > 1000)
+    return 'icon 必须是长度不超过 1000 的字符串';
+  if (!isSafeRelativePath(raw)) return 'icon 路径不安全';
+  if (!raw.startsWith('media/')) return 'icon 必须位于 media/ 下';
+  if (!isPluginId(pluginId) || !isReleaseVersion(version))
+    return 'icon 缺少可校验的插件 id / 版本';
+  const prefix = `media/${pluginId}/${version}/`;
+  if (!raw.startsWith(prefix)) return 'icon 路径必须指向本插件对应版本的 media 目录';
+  const file = raw.slice(prefix.length);
+  if (!file || file.includes('/')) return 'icon 必须是 media 目录下的单个文件';
+  const extension = file.slice(file.lastIndexOf('.') + 1).toLowerCase();
+  if (!file.includes('.') || !ICON_EXTENSIONS.includes(extension))
+    return `icon 扩展名必须是 ${ICON_EXTENSIONS.join(' / ')}`;
+  if (raw !== mediaPath(pluginId, version, file)) return 'icon 路径不规范';
+  return null;
+}
 
 export function validateCompatibility(raw) {
   const errors = [];
@@ -184,6 +210,17 @@ export function validateMarketPlugin(raw) {
     )
       errors.push('readme 不合法');
   }
+  if (raw.icon !== undefined) {
+    // 图标跟随最新发布版本，和 README 用同一个版本口径
+    const version =
+      Array.isArray(raw.versions) &&
+      raw.versions.length > 0 &&
+      isReleaseVersion(raw.versions.at(-1)?.version)
+        ? raw.versions.at(-1).version
+        : null;
+    const problem = version ? validatePluginIcon(raw.icon, raw.id, version) : 'icon 缺少版本';
+    if (problem) errors.push(problem);
+  }
   if (!Array.isArray(raw.versions) || raw.versions.length === 0) {
     errors.push('versions 必须是非空数组');
   } else {
@@ -245,6 +282,8 @@ export function parseMarketIndex(raw) {
             })),
           }
         : {}),
+      // 可选图标：安全相对路径，客户端解析成同源 https 地址
+      ...(plugin.icon !== undefined ? { icon: plugin.icon } : {}),
       versions: [...plugin.versions]
         .sort((a, b) => compareVersions(a.version, b.version))
         .map((version) => ({ ...version, permissions: [...version.permissions] })),

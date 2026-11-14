@@ -181,6 +181,21 @@ export function parseCatalog(raw) {
         throw new Error(`插件 ${item.id} README 不合法`);
       readme = { ...item.readme };
     }
+    let icon = null;
+    if (item.icon !== undefined) {
+      const latest = versions.at(-1).version;
+      const prefix = `media/${item.id}/${latest}/`;
+      // 只认本站 v1/ 下的安全相对路径：站点 CSP 是 img-src 'self'，不放宽
+      if (
+        typeof item.icon !== 'string' ||
+        !isSafeRelativePath(item.icon) ||
+        !item.icon.startsWith(prefix) ||
+        item.icon.slice(prefix.length).includes('/') ||
+        !/\.(?:svg|png|webp|gif|jpe?g)$/i.test(item.icon)
+      )
+        throw new Error(`插件 ${item.id} 图标不合法`);
+      icon = item.icon;
+    }
     plugins.push({
       id: item.id,
       name,
@@ -192,6 +207,7 @@ export function parseCatalog(raw) {
       ...(text(item.homepage, 500)?.startsWith('https://')
         ? { homepage: item.homepage }
         : {}),
+      ...(icon ? { icon } : {}),
       versions,
       readme,
       latest: versions.at(-1),
@@ -263,7 +279,24 @@ export function renderPluginCard(doc, plugin) {
     element(doc, 'span', 'category', CATEGORY_LABELS[plugin.category])
   );
   card.append(top);
-  card.append(element(doc, 'h3', 'plugin-title', plugin.name));
+  // 图标可选：加载失败时退回首字母占位，不把破图留在页面上
+  const heading = element(doc, 'div', 'plugin-heading');
+  const iconSrc = plugin.icon ? safeHref(plugin.icon) : null;
+  if (iconSrc) {
+    const icon = element(doc, 'img', 'plugin-icon');
+    icon.setAttribute('alt', '');
+    icon.setAttribute('loading', 'lazy');
+    icon.setAttribute('src', iconSrc);
+    icon.addEventListener('error', () => {
+      const fallback = element(doc, 'span', 'plugin-icon fallback', plugin.name.slice(0, 1));
+      icon.replaceWith(fallback);
+    });
+    heading.append(icon);
+  } else {
+    heading.append(element(doc, 'span', 'plugin-icon fallback', plugin.name.slice(0, 1)));
+  }
+  heading.append(element(doc, 'h3', 'plugin-title', plugin.name));
+  card.append(heading);
   card.append(element(doc, 'p', 'plugin-description', plugin.description));
 
   const tags = element(doc, 'ul', 'tag-list');

@@ -132,6 +132,15 @@ export function verifyLedgerArtifacts(v1, ledger) {
       throw new Error(`ledger README 大小不匹配：${artifact.readme.path}`);
     if (sha256File(readmeFile) !== artifact.readme.sha256)
       throw new Error(`ledger README 哈希不匹配：${artifact.readme.path}`);
+    // 图标一旦记入 ledger，字节就必须逐字节固定：换图、缩图、删图都会中止构建
+    if (artifact.icon) {
+      const iconFile = join(v1, artifact.icon.path);
+      if (!existsSync(iconFile)) throw new Error(`ledger 图标缺失：${artifact.icon.path}`);
+      if (statSync(iconFile).size !== artifact.icon.size)
+        throw new Error(`ledger 图标大小不匹配：${artifact.icon.path}`);
+      if (sha256File(iconFile) !== artifact.icon.sha256)
+        throw new Error(`ledger 图标哈希不匹配：${artifact.icon.path}`);
+    }
   }
 }
 
@@ -140,8 +149,9 @@ export function verifyNoUnledgeredArtifacts(v1, ledger) {
   for (const artifact of ledger.artifacts) {
     allowed.add(artifact.path);
     allowed.add(artifact.readme.path);
+    if (artifact.icon) allowed.add(artifact.icon.path);
   }
-  for (const folder of ['packages', 'readmes']) {
+  for (const folder of ['packages', 'readmes', 'media']) {
     const root = join(v1, folder);
     if (!existsSync(root)) continue;
     assertNoLinks(root, folder, {
@@ -190,7 +200,14 @@ export function loadHistory(historyRoot, { publicKeyPem, allowTestKey = false } 
   }
   if (!existsSync(indexPath) || !existsSync(signaturePath))
     throw new Error('历史 dist 的 index.json 与 .sig 必须同时存在');
-  const allowedV1 = new Set(['index.json', 'index.json.sig', 'history', 'packages', 'readmes']);
+  const allowedV1 = new Set([
+    'index.json',
+    'index.json.sig',
+    'history',
+    'packages',
+    'readmes',
+    'media',
+  ]);
   for (const name of readdirSync(v1)) {
     if (!allowedV1.has(name)) throw new Error(`历史 v1 含未验证文件：${name}`);
   }

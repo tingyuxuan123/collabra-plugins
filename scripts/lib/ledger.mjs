@@ -1,7 +1,10 @@
 import {
   HISTORY_LEDGER_SCHEMA_VERSION,
+  ICON_EXTENSIONS,
+  MAX_ICON_BYTES,
   MAX_PACKAGE_BYTES,
   MAX_README_BYTES,
+  mediaPath,
   packagePath,
   readmePath,
 } from './constants.mjs';
@@ -31,8 +34,30 @@ const ARTIFACT_KEYS = [
   'permissions',
   'compatibility',
   'readme',
+  'icon',
 ];
 const README_KEYS = ['path', 'sha256', 'size'];
+const ICON_KEYS = ['path', 'sha256', 'size'];
+
+/**
+ * 图标是可选的，但一旦进入 ledger 就按包/README 同样的口径做不可变约束：
+ * 路径固定为 `media/<id>/<version>/<file>`，大小与哈希都必须逐字节固定。
+ */
+function normalizeIcon(raw, pluginId, version) {
+  if (raw === undefined) return { ok: true, value: undefined };
+  if (!isRecord(raw) || !hasOnlyKeys(raw, ICON_KEYS)) return { ok: false };
+  const prefix = `media/${pluginId}/${version}/`;
+  if (typeof raw.path !== 'string' || !raw.path.startsWith(prefix)) return { ok: false };
+  const file = raw.path.slice(prefix.length);
+  if (!file || file.includes('/')) return { ok: false };
+  const extension = file.slice(file.lastIndexOf('.') + 1).toLowerCase();
+  if (!file.includes('.') || !ICON_EXTENSIONS.includes(extension)) return { ok: false };
+  if (raw.path !== mediaPath(pluginId, version, file)) return { ok: false };
+  if (!isHex(raw.sha256)) return { ok: false };
+  if (!Number.isSafeInteger(raw.size) || raw.size <= 0 || raw.size > MAX_ICON_BYTES)
+    return { ok: false };
+  return { ok: true, value: { path: raw.path, sha256: raw.sha256, size: raw.size } };
+}
 
 function normalizeArtifact(raw) {
   if (!isRecord(raw) || !hasOnlyKeys(raw, ARTIFACT_KEYS)) return null;
@@ -64,6 +89,8 @@ function normalizeArtifact(raw) {
     raw.readme.size > MAX_README_BYTES
   )
     return null;
+  const icon = normalizeIcon(raw.icon, raw.pluginId, raw.version);
+  if (!icon.ok) return null;
   return {
     pluginId: raw.pluginId,
     version: raw.version,
@@ -77,6 +104,7 @@ function normalizeArtifact(raw) {
       sha256: raw.readme.sha256,
       size: raw.readme.size,
     },
+    ...(icon.value ? { icon: icon.value } : {}),
   };
 }
 

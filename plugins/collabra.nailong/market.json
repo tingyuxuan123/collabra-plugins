@@ -1,0 +1,29 @@
+{
+  "id": "collabra.nailong",
+  "name": "奶龙（Collabra 适配版）",
+  "description": "奶龙主题的 Collabra 适配版：奶油黄配巧克力棕，角色图、动效与图标沿用上游原始素材，CSS 挂点适配当前 Collabra 布局并带紧凑窗口保护。社区收录，非官方。",
+  "tier": "community",
+  "category": "themes",
+  "tags": [
+    "theme","light","dark","warm"
+  ],
+  "license": "MIT (adaptation files); artwork terms see NOTICE.md",
+  "homepage": "https://github.com/tingyuxuan123/collabra-plugins",
+  "versions": {
+    "1.0.0": {
+      "compatibility": {
+        "host": "collabra",
+        "apiVersion": 1,
+        "minAppVersion": "0.2.81",
+        "platforms": [
+          "darwin"
+        ],
+        "testedSurfaces": [
+          "code",
+          "settings",
+          "bot"
+        ]
+      }
+    }
+  }
+}

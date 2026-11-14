@@ -1,9 +1,12 @@
 import { existsSync, lstatSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  ICON_EXTENSIONS,
+  MAX_ICON_BYTES,
   MAX_MANIFEST_BYTES,
   MAX_README_BYTES,
   SUPPORTED_PERMISSIONS,
+  mediaPath,
 } from './constants.mjs';
 import { assertNoLinks, collectPackageFiles, readJson, sha256 } from './fs.mjs';
 import {
@@ -182,6 +185,71 @@ function parseReadme(files, pluginId, version) {
   return readme.data;
 }
 
+/**
+ * 包内图标：扩展名白名单 + 真实字节签名双重校验，避免把改名的 HTML/脚本
+ * 当图片发给用户。SVG 额外拒绝脚本与事件属性（站点用 <img> 渲染，仍做一层）。
+ */
+function sniffIcon(bytes, extension) {
+  const head = bytes.subarray(0, 32);
+  const magic = {
+    png: () => head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+    gif: () => head.subarray(0, 4).toString('latin1') === 'GIF8',
+    jpg: () => head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff,
+    jpeg: () => head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff,
+    webp: () =>
+      head.subarray(0, 4).toString('latin1') === 'RIFF' &&
+      head.subarray(8, 12).toString('latin1') === 'WEBP',
+  };
+  if (extension === 'svg') {
+    const text = bytes.toString('utf8').replace(/^\uFEFF/, '').trimStart();
+    return /^<(\?xml|svg|!--)/i.test(text) && /<svg[\s>]/i.test(text);
+  }
+  const check = magic[extension];
+  return check ? check() : false;
+}
+
+function parseIcon(files, pluginId, version, manifest) {
+  const rel = manifest.icon;
+  if (rel === undefined) return null;
+  if (!isSafeRelativePath(rel)) throw new Error(`${pluginId}@${version} icon 路径不安全`);
+  if (rel.includes('/'))
+    throw new Error(`${pluginId}@${version} icon 必须是包根下的单个文件名`);
+  const extension = rel.slice(rel.lastIndexOf('.') + 1).toLowerCase();
+  if (!rel.includes('.') || !ICON_EXTENSIONS.includes(extension))
+    throw new Error(`${pluginId}@${version} icon 扩展名不支持：${rel}`);
+  const file = files.find((item) => item.path === rel);
+  if (!file) throw new Error(`${pluginId}@${version} 清单 icon 指向的文件不存在`);
+  if (file.data.length === 0) throw new Error(`${pluginId}@${version} icon 为空`);
+  if (file.data.length > MAX_ICON_BYTES)
+    throw new Error(`${pluginId}@${version} icon 超过 ${MAX_ICON_BYTES} 字节`);
+  if (!sniffIcon(file.data, extension))
+    throw new Error(`${pluginId}@${version} icon 内容与扩展名不符（疑似伪图）`);
+  if (extension === 'svg' && hasActiveSvgContent(file.data.toString('utf8')))
+    throw new Error(`${pluginId}@${version} icon 不允许包含脚本或事件属性`);
+  return {
+    file: rel,
+    path: mediaPath(pluginId, version, rel),
+    sha256: sha256(file.data),
+    size: file.data.length,
+    bytes: file.data,
+  };
+}
+
+/**
+ * SVG 里任何可执行/可嵌入的东西都拒：`<script>`、`<foreignObject>`、`javascript:`
+ * 以及全部 `on*` 事件属性（onload、onmouseover、onanimationstart…）。
+ * 只做字符级匹配，不引入 XML/CSS 解析依赖；图标是扁平矢量图，拒掉这些不会误伤。
+ */
+function hasActiveSvgContent(text) {
+  return (
+    /<script[\s>/]/i.test(text) ||
+    /<foreignObject[\s>/]/i.test(text) ||
+    /javascript:/i.test(text) ||
+    // XML 属性必须由空白分隔，属性名以 on 开头的都算事件处理器
+    /\son[a-z]+\s*=/i.test(text)
+  );
+}
+
 function validateThemeAssets(files, pluginId, version, manifest) {
   const themes = manifest.contributes?.themes ?? [];
   if (!Array.isArray(themes)) return;
@@ -282,6 +350,7 @@ export function loadSourcePlugins(sourcesDir) {
       }
       validateThemeAssets(files, meta.id, version, manifest);
       const readmeBytes = parseReadme(files, meta.id, version);
+      const icon = parseIcon(files, meta.id, version, manifest);
       const zip = createZip(files);
       versions.push({
         version,
@@ -290,6 +359,7 @@ export function loadSourcePlugins(sourcesDir) {
         permissions: [...manifest.permissions],
         files,
         readmeBytes,
+        icon,
         zip,
         sha256: sha256(zip),
         size: zip.length,
@@ -297,6 +367,8 @@ export function loadSourcePlugins(sourcesDir) {
     }
     if (sourceVersions.size > 0)
       throw new Error(`${name} 存在未在 market.json 声明的版本目录：${[...sourceVersions].join(', ')}`);
+    // 图标跟随最新发布版本，与 README 同一口径
+    const newestIcon = versions.at(-1)?.icon ?? null;
     const candidate = {
       id: meta.id,
       name: meta.name,
@@ -307,6 +379,7 @@ export function loadSourcePlugins(sourcesDir) {
       license: meta.license,
       ...(meta.homepage !== undefined ? { homepage: meta.homepage } : {}),
       ...(meta.screenshots !== undefined ? { screenshots: meta.screenshots } : {}),
+      ...(newestIcon ? { icon: newestIcon.path } : {}),
       versions: versions.map((version) => ({
         version: version.version,
         permissions: version.permissions,

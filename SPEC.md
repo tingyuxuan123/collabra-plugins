@@ -66,6 +66,16 @@ An empty list is honest and allowed for an initial release. Palette support and
 decorative coverage must not be conflated. Existing index fields (optional bounded
 README path/hash/size, HTTPS homepage/screenshots) may be used unchanged.
 
+`icon` is an optional plugin-level field: a safe relative path under `media/` of the
+form `media/<id>/<latest-version>/<file>`, restricted to `.svg`, `.png`, `.webp`,
+`.gif`, `.jpg`/`.jpeg`. It must not be an external URL, and the client resolves it
+against the same Pages origin. The icon bytes come from the `icon` file declared in
+the reviewed package manifest and are copied verbatim; when published they are
+recorded in the signed ledger with path, SHA-256 and size like packages and READMEs.
+An icon, once recorded for a version, may not be replaced or removed, and a version
+published without an icon may not gain one later. The field is optional, so
+pre-existing entries without it stay valid and unchanged.
+
 Output layout: `v1/index.json`, `v1/index.json.sig`,
 `v1/packages/<id>/<version>.zip`, optional versioned README and local media files.
 Catalog may offer download and instructions for local ZIP installation; do not

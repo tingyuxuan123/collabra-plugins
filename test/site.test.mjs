@@ -10,6 +10,7 @@ import {
   formatBytes,
   parseCatalog,
   renderCatalog,
+  renderPluginCard,
   safeHref,
   verifyIndexBytes,
 } from '../web/catalog.js';
@@ -81,7 +82,18 @@ class FakeNode {
   }
 
   append(...nodes) {
-    for (const node of nodes) this.children.push(node);
+    for (const node of nodes) {
+      node.parent = this;
+      this.children.push(node);
+    }
+  }
+
+  replaceWith(node) {
+    const siblings = this.parent?.children ?? [];
+    const at = siblings.indexOf(this);
+    if (at < 0) return;
+    node.parent = this.parent;
+    siblings[at] = node;
   }
 
   replaceChildren(...nodes) {
@@ -254,4 +266,45 @@ test('fetchCatalog 在签名有效时返回解析结果，无效时拒绝', asyn
   });
   assert.equal(result.index.sequence, 1);
   assert.equal(result.verification.verified, true);
+});
+
+test('站点图标：同源 media 路径渲染成 img，非法路径与加载失败都有兜底', () => {
+  const withIcon = {
+    ...index,
+    plugins: [{ ...plugin, icon: 'media/collabra.paper/1.0.0/icon.svg' }],
+  };
+  const parsed = parseCatalog(withIcon);
+  const doc = fakeDocument();
+  const card = renderPluginCard(doc, parsed.plugins[0]);
+  const nodes = allNodes(card);
+  const image = nodes.find((node) => node.tagName === 'img');
+  assert.ok(image, '应渲染插件图标 img');
+  assert.equal(image.attributes.src, './v1/media/collabra.paper/1.0.0/icon.svg');
+  assert.equal(image.attributes.alt, '');
+  assert.equal(image.attributes.loading, 'lazy');
+
+  // 加载失败时换成首字母占位，不留破图
+  image.listeners.error();
+  const after = allNodes(card);
+  assert.equal(after.some((node) => node.tagName === 'img'), false);
+  const fallback = after.find((node) => node.className === 'plugin-icon fallback');
+  assert.ok(fallback, '缺少占位');
+  assert.equal(fallback.textContent, 'C');
+
+  for (const icon of [
+    'https://evil.example.com/icon.svg',
+    'media/collabra.other/1.0.0/icon.svg',
+    'media/collabra.paper/2.0.0/icon.svg',
+    'media/collabra.paper/1.0.0/../../x.svg',
+    'media/collabra.paper/1.0.0/icon.exe',
+  ]) {
+    assert.throws(
+      () => parseCatalog({ ...index, plugins: [{ ...plugin, icon }] }),
+      /图标不合法/,
+      `应拒绝 ${icon}`
+    );
+  }
+  // 没有 icon 的条目继续可渲染
+  const plainCard = renderPluginCard(fakeDocument(), parseCatalog(index).plugins[0]);
+  assert.ok(allNodes(plainCard).some((node) => node.className === 'plugin-icon fallback'));
 });

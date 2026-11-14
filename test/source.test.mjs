@@ -21,8 +21,9 @@ import {
 test('仓库自带的 collabra.paper 是纯调色板、零权限、无 JS 入口', () => {
   const { plugins, warnings } = loadSourcePlugins(join(repoRoot, 'plugins'));
   assert.deepEqual(warnings, []);
-  assert.equal(plugins.length, 1);
-  const plugin = plugins[0];
+  // 仓库里还有其他插件（社区配色包），它们由 theme-plugins.test.mjs 覆盖
+  const plugin = plugins.find((item) => item.id === 'collabra.paper');
+  assert.ok(plugin, '仓库源缺少 collabra.paper');
   assert.equal(plugin.id, 'collabra.paper');
   assert.equal(plugin.meta.name, 'Collabra Paper');
   assert.equal(plugin.versions.length, 1);

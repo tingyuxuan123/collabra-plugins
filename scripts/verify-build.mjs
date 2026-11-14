@@ -90,6 +90,13 @@ try {
       if (sha256File(path) !== plugin.readme.sha256)
         throw new Error(`README 哈希不匹配：${plugin.readme.path}`);
     }
+    // 图标是可选字段，但只要索引里有就必须真实存在；字节由签名 ledger 固定，
+    // 这里只复核"索引指向的文件确实在产物里且非空"。
+    if (plugin.icon) {
+      const path = join(v1, plugin.icon);
+      if (!existsSync(path)) throw new Error(`缺少图标：${plugin.icon}`);
+      if (statSync(path).size <= 0) throw new Error(`图标为空：${plugin.icon}`);
+    }
   }
   for (const file of ['index.html', 'site.css', 'catalog.js']) {
     if (!existsSync(join(options.out, file))) throw new Error(`站点缺少 ${file}`);

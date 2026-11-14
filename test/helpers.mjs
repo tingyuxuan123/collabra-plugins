@@ -37,6 +37,17 @@ export function makeKeys(dir) {
 
 export function copyPaperSource(root) {
   const sources = join(root, 'plugins');
+  // 只复制 collabra.paper：构建/历史用例都在验证"已发布的那一个插件"。
+  // 仓库里其他插件的入库与构建由各自用例（copyAllSources）覆盖。
+  cpSync(join(repoRoot, 'plugins', 'collabra.paper'), join(sources, 'collabra.paper'), {
+    recursive: true,
+  });
+  return sources;
+}
+
+/** 复制仓库里全部插件源，用于多插件入库/构建用例。 */
+export function copyAllSources(root) {
+  const sources = join(root, 'plugins');
   cpSync(join(repoRoot, 'plugins'), sources, { recursive: true });
   return sources;
 }
