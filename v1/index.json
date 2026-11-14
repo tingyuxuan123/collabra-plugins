@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
   "marketId": "collabra",
-  "sequence": 3,
-  "generatedAt": "2026-11-14T06:59:55.815Z",
+  "sequence": 4,
+  "generatedAt": "2026-11-14T07:36:33.544Z",
   "plugins": [
     {
       "id": "collabra.nailong",
@@ -18,7 +18,7 @@
       ],
       "license": "MIT (adaptation files); artwork terms see NOTICE.md",
       "homepage": "https://github.com/tingyuxuan123/collabra-plugins",
-      "icon": "media/collabra.nailong/1.0.0/icon.svg",
+      "icon": "media/collabra.nailong/1.0.1/icon.svg",
       "versions": [
         {
           "version": "1.0.0",
@@ -39,12 +39,33 @@
               "bot"
             ]
           }
+        },
+        {
+          "version": "1.0.1",
+          "permissions": [],
+          "path": "packages/collabra.nailong/1.0.1.zip",
+          "sha256": "6b7652007ec0ed89119dffb02dc4a3f7474c62867e89ab1d807cb572d066c63d",
+          "size": 583883,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.81",
+            "platforms": [
+              "darwin",
+              "win32"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings",
+              "bot"
+            ]
+          }
         }
       ],
       "readme": {
-        "path": "readmes/collabra.nailong/1.0.0.md",
-        "sha256": "49374d3bd3cef57b6969066f5c2058eedade84cfbe4cfcc35486908aec934a18",
-        "size": 4332
+        "path": "readmes/collabra.nailong/1.0.1.md",
+        "sha256": "e624940fc2bc8cadea52aed5ae18b07fc6842e7fb6c2c326c5fedbdc5bd83913",
+        "size": 5450
       }
     },
     {
@@ -61,7 +82,7 @@
       ],
       "license": "MIT (adaptation files); artwork terms see NOTICE.md",
       "homepage": "https://github.com/tingyuxuan123/collabra-plugins",
-      "icon": "media/collabra.naiwa/1.0.0/icon.svg",
+      "icon": "media/collabra.naiwa/1.0.1/icon.svg",
       "versions": [
         {
           "version": "1.0.0",
@@ -82,12 +103,33 @@
               "bot"
             ]
           }
+        },
+        {
+          "version": "1.0.1",
+          "permissions": [],
+          "path": "packages/collabra.naiwa/1.0.1.zip",
+          "sha256": "3757526c507710baba977b4e97f58da94e9e099049d86ff038b68c21ccc02558",
+          "size": 720364,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.81",
+            "platforms": [
+              "darwin",
+              "win32"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings",
+              "bot"
+            ]
+          }
         }
       ],
       "readme": {
-        "path": "readmes/collabra.naiwa/1.0.0.md",
-        "sha256": "52250f673718aa858bc553bc2bcde7bc3159ee4ec77ece33da51d9a160aef88b",
-        "size": 4317
+        "path": "readmes/collabra.naiwa/1.0.1.md",
+        "sha256": "11ecdb856675ff67a4a558bf64f8c79969501ebe07271b4aa5ad04136c3408fe",
+        "size": 5435
       }
     },
     {
