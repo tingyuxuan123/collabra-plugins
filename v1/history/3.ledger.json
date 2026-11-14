@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sequence": 3,
+  "artifacts": [
+    {
+      "pluginId": "collabra.nailong",
+      "version": "1.0.0",
+      "path": "packages/collabra.nailong/1.0.0.zip",
+      "sha256": "8c2975165fb7b5a01b5d48f86a5f85fe78af99e100b441d5d9beb6e39d05794d",
+      "size": 582415,
+      "permissions": [],
+      "compatibility": {
+        "host": "collabra",
+        "apiVersion": 1,
+        "minAppVersion": "0.2.81",
+        "platforms": [
+          "darwin"
+        ],
+        "testedSurfaces": [
+          "code",
+          "settings",
+          "bot"
+        ]
+      },
+      "readme": {
+        "path": "readmes/collabra.nailong/1.0.0.md",
+        "sha256": "49374d3bd3cef57b6969066f5c2058eedade84cfbe4cfcc35486908aec934a18",
+        "size": 4332
+      },
+      "icon": {
+        "path": "media/collabra.nailong/1.0.0/icon.svg",
+        "sha256": "e8b444afaf79269cd45ea8876b2ce0878db06a1501e0809154d80e705812caa0",
+        "size": 4153
+      }
+    },
+    {
+      "pluginId": "collabra.naiwa",
+      "version": "1.0.0",
+      "path": "packages/collabra.naiwa/1.0.0.zip",
+      "sha256": "e05a97b84b04aa7b628de52fbc2f57cf0e2e87c715795ab26ceb4363cf60c069",
+      "size": 718896,
+      "permissions": [],
+      "compatibility": {
+        "host": "collabra",
+        "apiVersion": 1,
+        "minAppVersion": "0.2.81",
+        "platforms": [
+          "darwin"
+        ],
+        "testedSurfaces": [
+          "code",
+          "settings",
+          "bot"
+        ]
+      },
+      "readme": {
+        "path": "readmes/collabra.naiwa/1.0.0.md",
+        "sha256": "52250f673718aa858bc553bc2bcde7bc3159ee4ec77ece33da51d9a160aef88b",
+        "size": 4317
+      },
+      "icon": {
+        "path": "media/collabra.naiwa/1.0.0/icon.svg",
+        "sha256": "00fafc869d5134159f437264c2df43f59a626d58b57708a16f35691e0d09df89",
+        "size": 15132
+      }
+    },
+    {
+      "pluginId": "collabra.paper",
+      "version": "1.0.0",
+      "path": "packages/collabra.paper/1.0.0.zip",
+      "sha256": "830976b5b9c3426512e11d744228eab458afa8e65058d58efbd5fc3cc955d836",
+      "size": 4035,
+      "permissions": [],
+      "compatibility": {
+        "host": "collabra",
+        "apiVersion": 1,
+        "minAppVersion": "0.2.80",
+        "platforms": [
+          "darwin",
+          "win32",
+          "linux"
+        ],
+        "testedSurfaces": []
+      },
+      "readme": {
+        "path": "readmes/collabra.paper/1.0.0.md",
+        "sha256": "f4ee18f95496ba505e392d2ab7efac8f2223bdf15f92cef5c8b49fc66fce1568",
+        "size": 1647
+      }
+    }
+  ]
+}
