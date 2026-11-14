@@ -129,12 +129,23 @@ native `.node` modules, other special files, hidden files, `node_modules`, neste
 path escapes. ZIP timestamps, order and permissions are fixed, so identical input produces
 identical bytes.
 
-## Install from a ZIP
+## Install
+
+**Recommended: install from the in-app Collabra market.** A market install records the
+`marketId` and can receive later market updates.
+
+### Local ZIP installation
+
+The ZIP download from this website is a **local ZIP source**. It requires manual updates and
+does not receive market updates. The steps below are the local-ZIP path:
 
 1. Download the version ZIP from the catalog.
 2. In Collabra, open **扩展 / Extensions → 添加扩展 / Add extension → 从 ZIP 安装**.
 3. Review the manifest, compatibility and permission summary; confirm to install and enable.
 4. For a theme, open the theme picker and select the plugin theme.
+
+Current Collabra does not support cross-source migration that preserves plugin data. Do not
+treat uninstalling and reinstalling as a lossless migration path.
 
 The catalog does not invent a URL scheme and does not bypass Collabra's install confirmation.
 For an older compatible version, use that version's own README (`readmes/<id>/<version>.md`);

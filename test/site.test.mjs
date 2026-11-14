@@ -198,6 +198,12 @@ test('过滤、大小格式化与页面来源静态检查', () => {
   assert.match(html, /default-src 'self'/);
   assert.match(html, /平台代码 MIT/);
   assert.match(html, /第三方插件以/);
+  assert.match(html, /推荐：应用内市场安装/);
+  assert.match(html, /marketId/);
+  assert.match(html, /本地 ZIP 来源，需要手动更新/);
+  assert.match(html, /当前不支持保留插件数据的跨来源迁移/);
+  assert.match(html, /不要把卸载重装当作无损迁移方案/);
+  assert.doesNotMatch(html, /卸载重装也不能把本地 ZIP 安装转成市场安装/);
   assert.doesNotMatch(html, /一键安装|install URI|collabra:\/\//i);
 });
 
