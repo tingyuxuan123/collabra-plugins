@@ -1,0 +1,262 @@
+/*
+ * 奶龙 · Collabra 适配版
+ * 素材取自本机已安装的 enso.nailong 0.1.2（themes/assets/ 原字节）。
+ *
+ * 与上游 0.1.2 的差异只有「挂点」和「全局覆盖」两类：
+ * - 删掉 @font-face / --font-family-sans / --radius：不再改用户外观设置与全局圆角；
+ * - 失效挂点换成 Collabra 真实存在的 data-enso / data-slot，见各段落注释；
+ * - 所有装饰 pointer-events:none，尺寸随视口与字号收缩；
+ * - 只装饰主窗口 Code 聊天区域，扩展页 / 图库 / 设计 / 设置不会被角色图污染。
+ */
+
+:root {
+  --nl-yellow: #ffd23f;
+  --nl-orange: #ff9b0f;
+  --nl-brown: #754113;
+  --nl-bubble: color-mix(in oklch, var(--nl-yellow) 30%, var(--background));
+  --nl-edge: color-mix(in oklch, var(--nl-orange) 38%, var(--border));
+  --nl-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --nl-peek: url("assets/peek.webp");
+  --nl-busy: url("assets/busy.webp");
+  --nl-busy-still: url("assets/busy-still.webp");
+  --nl-lying: url("assets/lying.webp");
+  --nl-welcome: url("assets/welcome.webp");
+  --nl-yay: url("assets/yay.webp");
+  --nl-wave: url("assets/wave.webp");
+  --nl-wordmark: url("assets/wordmark.webp");
+  --nl-face: url("assets/peek-face.webp");
+  --nl-bombloong: url("assets/bombloong-typing.webp");
+}
+
+.dark {
+  --nl-bubble: color-mix(in oklch, var(--nl-yellow) 16%, var(--background));
+  --nl-edge: color-mix(in oklch, var(--nl-yellow) 30%, var(--border));
+  --nl-wordmark: url("assets/wordmark-white.webp");
+}
+
+/* 减少动态效果：动图换第一帧，探头不再跳。 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --nl-busy: url("assets/busy-still.webp");
+    --nl-lying: url("assets/lying-still.webp");
+    --nl-welcome: url("assets/welcome-still.webp");
+    --nl-yay: url("assets/yay-still.webp");
+    --nl-bombloong: url("assets/bombloong-typing-still.webp");
+  }
+}
+
+::selection {
+  background: color-mix(in oklch, var(--nl-yellow) 55%, transparent);
+}
+
+/* 主窗口画布的奶酪斑点。画在 ::before 上，盖过应用自己的背景层。
+   :has([data-enso="sidebar"]) 保证设置 / 协作看板 / 设计窗口不会被铺上。 */
+[data-enso="canvas"]:has([data-enso="sidebar"]) {
+  position: relative;
+  isolation: isolate;
+  --nl-dot: color-mix(in oklch, var(--nl-orange) 15%, transparent);
+}
+
+.dark [data-enso="canvas"]:has([data-enso="sidebar"]) {
+  --nl-dot: color-mix(in oklch, var(--nl-yellow) 10%, transparent);
+}
+
+[data-enso="canvas"]:has([data-enso="sidebar"])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 30%, var(--nl-dot) 0 6px, transparent 7px) 0 0 / 72px 72px,
+    radial-gradient(circle at 75% 72%, var(--nl-dot) 0 3.5px, transparent 4.5px) 0 0 / 44px 44px;
+}
+
+/* 侧栏底部：奶龙躺在云上。只画图，不动侧栏自己的底色与布局。 */
+[data-enso="sidebar"] {
+  background-image: var(--nl-lying), url("assets/cloud.webp");
+  background-repeat: no-repeat;
+  background-position: center bottom 64px, center bottom 40px;
+  background-size: min(150px, 80%) auto, min(250px, 100%) auto;
+}
+
+.dark [data-enso="sidebar"] {
+  background-image: var(--nl-lying);
+  background-position: center bottom 52px;
+  background-size: min(150px, 80%) auto;
+}
+
+/* 用户消息：奶黄气泡。宿主 USER_BUBBLE 就是 bg-muted 的那个 div，
+   改名时这条规则自动失效，不会命中别的层。 */
+[data-enso="message-user"] > .bg-muted {
+  background: var(--nl-bubble);
+  border: 1px solid var(--nl-edge);
+  border-radius: 18px 18px 6px 18px;
+}
+
+/* 新对话还没有消息（timeline 里没有用户消息）：下方站着挥手的奶龙 + 字标。
+   原来挂在 [data-enso="main"] 的空态，Collabra 的空态就是空时间线；
+   加 [data-slot="chat-view"] 前缀，扩展页 / 设计画廊 / 侧栏 BTW 都不会被污染。 */
+[data-slot="chat-view"] [data-enso="timeline"]:not(:has([data-enso="message-user"])) {
+  background-image: var(--nl-wave), var(--nl-wordmark);
+  background-repeat: no-repeat, no-repeat;
+  background-position: center bottom 96px, center bottom 28px;
+  background-size: min(170px, 34vw, 26vh) auto, min(150px, 30vw) auto;
+}
+
+/* 同一屏右侧的「热烈欢迎」动图。 */
+[data-slot="chat-view"] [data-enso="timeline"]:not(:has([data-enso="message-user"]))::after {
+  content: "";
+  position: absolute;
+  right: 24px;
+  bottom: 12px;
+  width: min(132px, 26vw, 20vh);
+  aspect-ratio: 1;
+  background: var(--nl-welcome) center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* 「在忙」：思考中才动，历史里的思考块停在第一帧。
+   Collabra 用宿主写的 data-live 标记流式中（原版靠 .animate-pulse 类名）。 */
+[data-slot="chat-view"] [data-enso="thinking"] {
+  position: relative;
+  padding-left: 36px;
+}
+
+[data-slot="chat-view"] [data-enso="thinking"]::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -8px;
+  width: 34px;
+  height: 34px;
+  background: var(--nl-busy-still) center / contain no-repeat;
+  pointer-events: none;
+}
+
+[data-slot="chat-view"] [data-enso="thinking"][data-live]::before {
+  background-image: var(--nl-busy);
+}
+
+/* 代码块上沿探出的小脸。 */
+[data-slot="chat-view"] [data-enso="code-block"]::after {
+  content: "";
+  position: absolute;
+  right: 20px;
+  top: -13px;
+  width: 24px;
+  height: 24px;
+  background: var(--nl-face) center / contain no-repeat;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 时间线里的待办：好耶。原版用 :has(+ * [data-enso="composer"]) 排除输入区里的
+   待办条；Collabra 的待办条本身就在 composer 内，直接用聊天区前缀限定即可。 */
+[data-slot="chat-view"] [data-enso="todo"] {
+  position: relative;
+}
+
+[data-slot="chat-view"] [data-enso="todo"]::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: -30px;
+  width: min(44px, 9vw);
+  aspect-ratio: 1;
+  background: var(--nl-yay) center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* 输入框后面探头，聚焦时往上探。
+   原版挂 .enso-chat-col > :first-child，而 CHAT_COL 被时间线每一行复用，
+   会误命中每行首个子元素；改用宿主自己的 composer 挂点（宿主素材槽也在这）。 */
+[data-slot="chat-view"] [data-enso="composer"] {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-slot="chat-view"] [data-enso="composer"]::before {
+  content: "";
+  position: absolute;
+  right: 72px;
+  bottom: calc(100% - 4px);
+  width: min(84px, 20vw);
+  aspect-ratio: 32 / 25;
+  background: var(--nl-peek) center bottom / contain no-repeat;
+  pointer-events: none;
+  z-index: -1;
+  transform-origin: center bottom;
+  transition: transform 320ms var(--nl-spring);
+}
+
+[data-slot="chat-view"] [data-enso="composer"]:focus-within::before {
+  transform: translateY(-5px) scale(1.04);
+}
+
+/* 状态行左边的小脸。Collabra 没有 status-line，真实槽是 data-slot="stats-line"，
+   左侧 16px 是聊天列自己的内边距，脸画在这条空档里，不推挤任何统计分段。 */
+[data-slot="chat-view"] [data-slot="stats-line"]::before {
+  content: "";
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  translate: 0 -50%;
+  background: var(--nl-face) center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* 右侧面板：暴暴龙在角落里敲键盘。 */
+[data-enso="side-panel"] {
+  position: relative;
+}
+
+[data-enso="side-panel"]::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: min(72px, 14vw);
+  aspect-ratio: 1;
+  background: var(--nl-bombloong) center / contain no-repeat;
+  pointer-events: none;
+  opacity: 0.9;
+  z-index: 5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="chat-view"] [data-enso="composer"]::before {
+    transition: none;
+  }
+
+  [data-slot="chat-view"] [data-enso="composer"]:focus-within::before {
+    transform: none;
+  }
+}
+
+/*
+ * 紧凑窗口保护。逻辑视口不够同时放下正文和角色时（真机 800×600 + 18px 根字号），
+ * 先收起「会盖住正文」的三处大装饰：输入框外探头、右侧面板角落大图、
+ * 空时间线的大背景与欢迎动图。侧栏角色和思考 / 代码块 / 待办 / 状态行的行内小图照留。
+ * 素材没有被删除，只是在这个条件下不画；宽屏（>960px 且 >680px）行为与之前完全一致。
+ * 用 content:none 让伪元素不生成盒子，不靠 opacity/visibility 糊过去，避免留白占位。
+ */
+@media (max-height: 680px), (max-width: 960px) {
+  [data-slot="chat-view"] [data-enso="composer"]::before {
+    content: none;
+  }
+
+  [data-enso="side-panel"]::after {
+    content: none;
+  }
+
+  [data-slot="chat-view"] [data-enso="timeline"]:not(:has([data-enso="message-user"])) {
+    background-image: none;
+  }
+
+  [data-slot="chat-view"] [data-enso="timeline"]:not(:has([data-enso="message-user"]))::after {
+    content: none;
+  }
+}

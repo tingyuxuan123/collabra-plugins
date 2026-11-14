@@ -9,7 +9,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test test/build.test.mjs test/cli.test.mjs test/crypto.test.mjs test/history.test.mjs test/ids.test.mjs test/schema.test.mjs test/site.test.mjs test/source.test.mjs test/icon.test.mjs test/workflow.test.mjs test/zip.test.mjs",
+    "test": "node --test test/build.test.mjs test/cli.test.mjs test/crypto.test.mjs test/history.test.mjs test/ids.test.mjs test/schema.test.mjs test/site.test.mjs test/source.test.mjs test/theme-plugins.test.mjs test/icon.test.mjs test/workflow.test.mjs test/zip.test.mjs",
     "validate": "node scripts/validate-source.mjs",
     "build": "node scripts/build-market.mjs",
     "sign": "node scripts/sign-market.mjs",
