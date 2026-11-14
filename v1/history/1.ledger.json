@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "sequence": 1,
+  "artifacts": [
+    {
+      "pluginId": "collabra.paper",
+      "version": "1.0.0",
+      "path": "packages/collabra.paper/1.0.0.zip",
+      "sha256": "830976b5b9c3426512e11d744228eab458afa8e65058d58efbd5fc3cc955d836",
+      "size": 4035,
+      "permissions": [],
+      "compatibility": {
+        "host": "collabra",
+        "apiVersion": 1,
+        "minAppVersion": "0.2.80",
+        "platforms": [
+          "darwin",
+          "win32",
+          "linux"
+        ],
+        "testedSurfaces": []
+      },
+      "readme": {
+        "path": "readmes/collabra.paper/1.0.0.md",
+        "sha256": "f4ee18f95496ba505e392d2ab7efac8f2223bdf15f92cef5c8b49fc66fce1568",
+        "size": 1647
+      }
+    }
+  ]
+}

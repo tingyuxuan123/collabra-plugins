@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "marketId": "collabra",
+  "sequence": 1,
+  "generatedAt": "2026-11-14T04:52:27.787Z",
+  "plugins": [
+    {
+      "id": "collabra.paper",
+      "name": "Collabra Paper",
+      "description": "A warm neutral light and dark palette. Palette only: no scripts, network access, decoration or artwork.",
+      "tier": "official",
+      "category": "themes",
+      "tags": [
+        "theme",
+        "light",
+        "dark",
+        "neutral"
+      ],
+      "license": "MIT",
+      "homepage": "https://github.com/tingyuxuan123/collabra-plugins",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [],
+          "path": "packages/collabra.paper/1.0.0.zip",
+          "sha256": "830976b5b9c3426512e11d744228eab458afa8e65058d58efbd5fc3cc955d836",
+          "size": 4035,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.80",
+            "platforms": [
+              "darwin",
+              "win32",
+              "linux"
+            ],
+            "testedSurfaces": []
+          }
+        }
+      ],
+      "readme": {
+        "path": "readmes/collabra.paper/1.0.0.md",
+        "sha256": "f4ee18f95496ba505e392d2ab7efac8f2223bdf15f92cef5c8b49fc66fce1568",
+        "size": 1647
+      }
+    }
+  ]
+}
