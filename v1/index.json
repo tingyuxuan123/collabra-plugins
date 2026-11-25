@@ -1,9 +1,60 @@
 {
   "schemaVersion": 2,
   "marketId": "collabra",
-  "sequence": 4,
-  "generatedAt": "2026-11-14T07:36:33.544Z",
+  "sequence": 5,
+  "generatedAt": "2026-11-25T06:18:01.896Z",
   "plugins": [
+    {
+      "id": "codekiln.llmdoc",
+      "name": "知识地图",
+      "description": "为 CodeKiln 提供 llmdoc 项目知识的浏览、检索、变更复核和显式维护。只读检索，写入和 Git 提交需要确认。",
+      "tier": "community",
+      "category": "insights",
+      "tags": [
+        "llmdoc",
+        "knowledge",
+        "documentation",
+        "agent"
+      ],
+      "license": "AGPL-3.0-only",
+      "homepage": "https://github.com/tingyuxuan123/EnsoCode/tree/main/examples/plugins/llmdoc",
+      "icon": "media/codekiln.llmdoc/1.9.0/icon.svg",
+      "versions": [
+        {
+          "version": "1.9.0",
+          "permissions": [
+            "agent.tool",
+            "ui.view",
+            "composer.draft",
+            "agent.intercept",
+            "agent.inject",
+            "agent.observe"
+          ],
+          "path": "packages/codekiln.llmdoc/1.9.0.zip",
+          "sha256": "d992f48b214bf33d6d847914f24e8b0886a6c43b436daa7854157d232e4fbaa8",
+          "size": 174539,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.80",
+            "platforms": [
+              "darwin",
+              "win32",
+              "linux"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings"
+            ]
+          }
+        }
+      ],
+      "readme": {
+        "path": "readmes/codekiln.llmdoc/1.9.0.md",
+        "sha256": "ecd68b66bf44af71cd4f6d2febd845ac837c650c2d715357cc91e89f31546509",
+        "size": 8128
+      }
+    },
     {
       "id": "collabra.nailong",
       "name": "奶龙（Collabra 适配版）",
