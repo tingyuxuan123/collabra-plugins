@@ -70,6 +70,8 @@ export const SUPPORTED_PERMISSIONS = [
   'session.readAll',
   'session.focus',
   'session.create',
+  'agent.run',
+  'browser.control',
 ];
 
 export const HISTORY_LEDGER_SCHEMA_VERSION = 1;
