@@ -87,7 +87,10 @@ test('两个社区主题包已入库：id/主题键/tier/权限/兼容范围都�
   const { plugins, warnings } = loadSourcePlugins(join(repoRoot, 'plugins'));
   assert.deepEqual(warnings, []);
   assert.deepEqual(
-    plugins.map((plugin) => plugin.id).sort(),
+    plugins
+      .filter((plugin) => plugin.meta.category === 'themes')
+      .map((plugin) => plugin.id)
+      .sort(),
     ['collabra.nailong', 'collabra.naiwa', 'collabra.paper']
   );
   for (const theme of THEMES) {
@@ -297,7 +300,44 @@ test('README/NOTICE 只写事实：全局样式授权、无执行无网络、来
   }
 });
 
-test('构建：两个主题包进入索引与 media，paper 字节保持不变', () => {
+test('llmdoc 1.9.0：知识地图以社区插件进入索引，权限与兼容范围可审查', () => {
+  const { plugins } = loadSourcePlugins(join(repoRoot, 'plugins'));
+  const plugin = plugins.find((item) => item.id === 'codekiln.llmdoc');
+  assert.ok(plugin, '市场源缺少 codekiln.llmdoc');
+  assert.equal(plugin.meta.tier, 'community');
+  assert.equal(plugin.meta.category, 'insights');
+  assert.equal(plugin.meta.license, 'AGPL-3.0-only');
+  assert.match(plugin.meta.homepage, /^https:\/\//);
+  assert.deepEqual(
+    plugin.versions.map((item) => item.version),
+    ['1.9.0']
+  );
+  assert.deepEqual(plugin.versions[0].permissions, [
+    'agent.tool',
+    'ui.view',
+    'composer.draft',
+    'agent.intercept',
+    'agent.inject',
+    'agent.observe',
+  ]);
+  assert.deepEqual(plugin.versions[0].compatibility, {
+    host: 'collabra',
+    apiVersion: 1,
+    minAppVersion: '0.2.80',
+    platforms: ['darwin', 'win32', 'linux'],
+    testedSurfaces: ['code', 'settings'],
+  });
+  const dir = versionDir('codekiln.llmdoc', '1.9.0');
+  const manifest = readJson(join(dir, 'enso-plugin.json'));
+  assert.equal(manifest.name, '知识地图');
+  assert.equal(manifest.version, '1.9.0');
+  assert.equal(manifest.icon, 'icon.svg');
+  assert.match(read(join(dir, 'LICENSE')), /GNU AFFERO/);
+  assert.ok(existsSync(join(dir, 'README.md')));
+  assert.ok(existsSync(join(dir, 'knowledge.html')));
+});
+
+test('构建：主题包与 llmdoc 进入索引与 media，paper 字节保持不变', () => {
   const root = tempDir('collabra-themes-build-');
   const sources = copyAllSources(root);
   const keys = makeKeys(join(root, 'keys'));
@@ -305,10 +345,16 @@ test('构建：两个主题包进入索引与 media，paper 字节保持不变',
   const result = testBuild({ sources, history: join(root, 'none'), out, keys, now: fixedNow });
   const byId = new Map(result.index.plugins.map((plugin) => [plugin.id, plugin]));
   assert.deepEqual([...byId.keys()].sort(), [
+    'codekiln.llmdoc',
     'collabra.nailong',
     'collabra.naiwa',
     'collabra.paper',
   ]);
+  assert.equal(
+    byId.get('codekiln.llmdoc').icon,
+    'media/codekiln.llmdoc/1.9.0/icon.svg',
+    'llmdoc 图标必须随版本进入 media'
+  );
   const paper = byId.get('collabra.paper');
   assert.equal(paper.versions[0].sha256, PAPER_ZIP_SHA, 'paper ZIP 字节必须保持不变');
   assert.equal(paper.icon, undefined, '旧插件不能凭空长出 icon 字段');
