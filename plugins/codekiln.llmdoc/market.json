@@ -1,13 +1,22 @@
 {
   "id": "codekiln.llmdoc",
   "name": "知识地图",
-  "description": "为 CodeKiln 提供 llmdoc 项目知识的浏览、检索、变更复核和显式维护。只读检索，写入和 Git 提交需要确认。",
+  "description": "为 CodeKiln 提供 llmdoc 项目知识的浏览、检索、变更复核和显式维护；可选的后台自动维护随回合补充文档，保留审阅与回退，不自动提交。",
   "tier": "community",
   "category": "insights",
   "tags": ["llmdoc", "knowledge", "documentation", "agent"],
   "license": "AGPL-3.0-only",
   "homepage": "https://github.com/tingyuxuan123/EnsoCode/tree/main/examples/plugins/llmdoc",
   "versions": {
+    "1.10.0": {
+      "compatibility": {
+        "host": "collabra",
+        "apiVersion": 1,
+        "minAppVersion": "0.2.83",
+        "platforms": ["darwin", "win32", "linux"],
+        "testedSurfaces": ["code", "settings"]
+      }
+    },
     "1.9.0": {
       "compatibility": {
         "host": "collabra",

@@ -195,6 +195,8 @@ test('JSON 硬链接与缺失的 main 引用被拒绝，错误包含插件 id', 
 
 test('manifest 权限必须属于宿主支持集合', () => {
   assert.equal(SUPPORTED_PERMISSIONS.includes('fs.read'), true);
+  // 宿主 0.2.83 起提供 agent.run，市场白名单必须同步，否则插件无法上架。
+  assert.equal(SUPPORTED_PERMISSIONS.includes('agent.run'), true);
   assert.equal(SUPPORTED_PERMISSIONS.includes('unknown.permission'), false);
   const sources = copyPaperSource(tempDir());
   const manifestPath = join(paperVersionDir(sources, '1.0.0'), 'enso-plugin.json');

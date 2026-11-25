@@ -300,7 +300,7 @@ test('README/NOTICE 只写事实：全局样式授权、无执行无网络、来
   }
 });
 
-test('llmdoc 1.9.0：知识地图以社区插件进入索引，权限与兼容范围可审查', () => {
+test('llmdoc 1.10.0：知识地图以社区插件进入索引，权限与兼容范围可审查', () => {
   const { plugins } = loadSourcePlugins(join(repoRoot, 'plugins'));
   const plugin = plugins.find((item) => item.id === 'codekiln.llmdoc');
   assert.ok(plugin, '市场源缺少 codekiln.llmdoc');
@@ -310,31 +310,41 @@ test('llmdoc 1.9.0：知识地图以社区插件进入索引，权限与兼容�
   assert.match(plugin.meta.homepage, /^https:\/\//);
   assert.deepEqual(
     plugin.versions.map((item) => item.version),
-    ['1.9.0']
+    ['1.9.0', '1.10.0']
   );
-  assert.deepEqual(plugin.versions[0].permissions, [
+  const latest = plugin.versions.find((item) => item.version === '1.10.0');
+  assert.deepEqual(latest.permissions, [
     'agent.tool',
     'ui.view',
     'composer.draft',
     'agent.intercept',
     'agent.inject',
     'agent.observe',
+    'agent.run',
+    'fs.read',
+    'fs.write',
   ]);
-  assert.deepEqual(plugin.versions[0].compatibility, {
+  assert.deepEqual(latest.compatibility, {
     host: 'collabra',
     apiVersion: 1,
-    minAppVersion: '0.2.80',
+    minAppVersion: '0.2.83',
     platforms: ['darwin', 'win32', 'linux'],
     testedSurfaces: ['code', 'settings'],
   });
-  const dir = versionDir('codekiln.llmdoc', '1.9.0');
+  // 1.9.0 已发布，权限与兼容范围必须保持原样。
+  const previous = plugin.versions.find((item) => item.version === '1.9.0');
+  assert.equal(previous.permissions.length, 6);
+  assert.equal(previous.compatibility.minAppVersion, '0.2.80');
+  const dir = versionDir('codekiln.llmdoc', '1.10.0');
   const manifest = readJson(join(dir, 'enso-plugin.json'));
   assert.equal(manifest.name, '知识地图');
-  assert.equal(manifest.version, '1.9.0');
+  assert.equal(manifest.version, '1.10.0');
   assert.equal(manifest.icon, 'icon.svg');
   assert.match(read(join(dir, 'LICENSE')), /GNU AFFERO/);
   assert.ok(existsSync(join(dir, 'README.md')));
   assert.ok(existsSync(join(dir, 'knowledge.html')));
+  assert.ok(existsSync(join(dir, 'automation.mjs')));
+  assert.ok(existsSync(join(dir, 'run-cli.mjs')));
 });
 
 test('构建：主题包与 llmdoc 进入索引与 media，paper 字节保持不变', () => {
@@ -352,7 +362,7 @@ test('构建：主题包与 llmdoc 进入索引与 media，paper 字节保持不
   ]);
   assert.equal(
     byId.get('codekiln.llmdoc').icon,
-    'media/codekiln.llmdoc/1.9.0/icon.svg',
+    'media/codekiln.llmdoc/1.10.0/icon.svg',
     'llmdoc 图标必须随版本进入 media'
   );
   const paper = byId.get('collabra.paper');
