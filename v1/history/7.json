@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 2,
+  "marketId": "collabra",
+  "sequence": 7,
+  "generatedAt": "2026-11-25T13:10:20.222Z",
+  "plugins": [
+    {
+      "id": "codekiln.llmdoc",
+      "name": "知识地图",
+      "description": "为 CodeKiln 提供 llmdoc 项目知识的浏览、检索、变更复核和显式维护；可选的后台自动维护随回合补充文档，保留审阅与回退，不自动提交。",
+      "tier": "community",
+      "category": "insights",
+      "tags": [
+        "llmdoc",
+        "knowledge",
+        "documentation",
+        "agent"
+      ],
+      "license": "AGPL-3.0-only",
+      "homepage": "https://github.com/tingyuxuan123/EnsoCode/tree/main/examples/plugins/llmdoc",
+      "icon": "media/codekiln.llmdoc/1.10.0/icon.svg",
+      "versions": [
+        {
+          "version": "1.9.0",
+          "permissions": [
+            "agent.tool",
+            "ui.view",
+            "composer.draft",
+            "agent.intercept",
+            "agent.inject",
+            "agent.observe"
+          ],
+          "path": "packages/codekiln.llmdoc/1.9.0.zip",
+          "sha256": "d992f48b214bf33d6d847914f24e8b0886a6c43b436daa7854157d232e4fbaa8",
+          "size": 174539,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.80",
+            "platforms": [
+              "darwin",
+              "win32",
+              "linux"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings"
+            ]
+          }
+        },
+        {
+          "version": "1.10.0",
+          "permissions": [
+            "agent.tool",
+            "ui.view",
+            "composer.draft",
+            "agent.intercept",
+            "agent.inject",
+            "agent.observe",
+            "agent.run",
+            "fs.read",
+            "fs.write"
+          ],
+          "path": "packages/codekiln.llmdoc/1.10.0.zip",
+          "sha256": "db727cdaeace1535d87010cd17a96a2a06ba5afa315b6f929bebe39d0bdc054e",
+          "size": 204939,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.83",
+            "platforms": [
+              "darwin",
+              "win32",
+              "linux"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings"
+            ]
+          }
+        }
+      ],
+      "readme": {
+        "path": "readmes/codekiln.llmdoc/1.10.0.md",
+        "sha256": "93bc6505d643b6174ffc43f6deb4c50c78f0d2f202d7117966ab329cb62dfa5d",
+        "size": 10113
+      }
+    },
+    {
+      "id": "collabra.nailong",
+      "name": "奶龙（Collabra 适配版）",
+      "description": "奶龙主题的 Collabra 适配版：奶油黄配巧克力棕，角色图、动效与图标沿用上游原始素材，CSS 挂点适配当前 Collabra 布局并带紧凑窗口保护。社区收录，非官方。",
+      "tier": "community",
+      "category": "themes",
+      "tags": [
+        "theme",
+        "light",
+        "dark",
+        "warm"
+      ],
+      "license": "MIT (adaptation files); artwork terms see NOTICE.md",
+      "homepage": "https://github.com/tingyuxuan123/collabra-plugins",
+      "icon": "media/collabra.nailong/1.0.1/icon.svg",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [],
+          "path": "packages/collabra.nailong/1.0.0.zip",
+          "sha256": "8c2975165fb7b5a01b5d48f86a5f85fe78af99e100b441d5d9beb6e39d05794d",
+          "size": 582415,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.81",
+            "platforms": [
+              "darwin"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings",
+              "bot"
+            ]
+          }
+        },
+        {
+          "version": "1.0.1",
+          "permissions": [],
+          "path": "packages/collabra.nailong/1.0.1.zip",
+          "sha256": "6b7652007ec0ed89119dffb02dc4a3f7474c62867e89ab1d807cb572d066c63d",
+          "size": 583883,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.81",
+            "platforms": [
+              "darwin",
+              "win32"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings",
+              "bot"
+            ]
+          }
+        }
+      ],
+      "readme": {
+        "path": "readmes/collabra.nailong/1.0.1.md",
+        "sha256": "e624940fc2bc8cadea52aed5ae18b07fc6842e7fb6c2c326c5fedbdc5bd83913",
+        "size": 5450
+      }
+    },
+    {
+      "id": "collabra.naiwa",
+      "name": "奶蛙（Collabra 适配版）",
+      "description": "奶蛙主题的 Collabra 适配版：荷叶绿配奶黄，角色动图、字标与图标沿用上游原始素材，CSS 挂点适配当前 Collabra 布局并带紧凑窗口保护。社区收录，非官方。",
+      "tier": "community",
+      "category": "themes",
+      "tags": [
+        "theme",
+        "light",
+        "dark",
+        "green"
+      ],
+      "license": "MIT (adaptation files); artwork terms see NOTICE.md",
+      "homepage": "https://github.com/tingyuxuan123/collabra-plugins",
+      "icon": "media/collabra.naiwa/1.0.1/icon.svg",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [],
+          "path": "packages/collabra.naiwa/1.0.0.zip",
+          "sha256": "e05a97b84b04aa7b628de52fbc2f57cf0e2e87c715795ab26ceb4363cf60c069",
+          "size": 718896,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.81",
+            "platforms": [
+              "darwin"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings",
+              "bot"
+            ]
+          }
+        },
+        {
+          "version": "1.0.1",
+          "permissions": [],
+          "path": "packages/collabra.naiwa/1.0.1.zip",
+          "sha256": "3757526c507710baba977b4e97f58da94e9e099049d86ff038b68c21ccc02558",
+          "size": 720364,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.81",
+            "platforms": [
+              "darwin",
+              "win32"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings",
+              "bot"
+            ]
+          }
+        }
+      ],
+      "readme": {
+        "path": "readmes/collabra.naiwa/1.0.1.md",
+        "sha256": "11ecdb856675ff67a4a558bf64f8c79969501ebe07271b4aa5ad04136c3408fe",
+        "size": 5435
+      }
+    },
+    {
+      "id": "collabra.paper",
+      "name": "Collabra Paper",
+      "description": "A warm neutral light and dark palette. Palette only: no scripts, network access, decoration or artwork.",
+      "tier": "official",
+      "category": "themes",
+      "tags": [
+        "theme",
+        "light",
+        "dark",
+        "neutral"
+      ],
+      "license": "MIT",
+      "homepage": "https://github.com/tingyuxuan123/collabra-plugins",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [],
+          "path": "packages/collabra.paper/1.0.0.zip",
+          "sha256": "830976b5b9c3426512e11d744228eab458afa8e65058d58efbd5fc3cc955d836",
+          "size": 4035,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.80",
+            "platforms": [
+              "darwin",
+              "win32",
+              "linux"
+            ],
+            "testedSurfaces": []
+          }
+        }
+      ],
+      "readme": {
+        "path": "readmes/collabra.paper/1.0.0.md",
+        "sha256": "f4ee18f95496ba505e392d2ab7efac8f2223bdf15f92cef5c8b49fc66fce1568",
+        "size": 1647
+      }
+    }
+  ]
+}

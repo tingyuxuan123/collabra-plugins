@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
   "marketId": "collabra",
-  "sequence": 6,
-  "generatedAt": "2026-11-25T13:04:43.902Z",
+  "sequence": 7,
+  "generatedAt": "2026-11-25T13:10:20.222Z",
   "plugins": [
     {
       "id": "codekiln.llmdoc",
