@@ -1,13 +1,13 @@
 {
   "schemaVersion": 2,
   "marketId": "collabra",
-  "sequence": 5,
-  "generatedAt": "2026-11-25T06:18:01.896Z",
+  "sequence": 6,
+  "generatedAt": "2026-11-25T13:04:43.902Z",
   "plugins": [
     {
       "id": "codekiln.llmdoc",
       "name": "知识地图",
-      "description": "为 CodeKiln 提供 llmdoc 项目知识的浏览、检索、变更复核和显式维护。只读检索，写入和 Git 提交需要确认。",
+      "description": "为 CodeKiln 提供 llmdoc 项目知识的浏览、检索、变更复核和显式维护；可选的后台自动维护随回合补充文档，保留审阅与回退，不自动提交。",
       "tier": "community",
       "category": "insights",
       "tags": [
@@ -18,7 +18,7 @@
       ],
       "license": "AGPL-3.0-only",
       "homepage": "https://github.com/tingyuxuan123/EnsoCode/tree/main/examples/plugins/llmdoc",
-      "icon": "media/codekiln.llmdoc/1.9.0/icon.svg",
+      "icon": "media/codekiln.llmdoc/1.10.0/icon.svg",
       "versions": [
         {
           "version": "1.9.0",
@@ -47,12 +47,43 @@
               "settings"
             ]
           }
+        },
+        {
+          "version": "1.10.0",
+          "permissions": [
+            "agent.tool",
+            "ui.view",
+            "composer.draft",
+            "agent.intercept",
+            "agent.inject",
+            "agent.observe",
+            "agent.run",
+            "fs.read",
+            "fs.write"
+          ],
+          "path": "packages/codekiln.llmdoc/1.10.0.zip",
+          "sha256": "db727cdaeace1535d87010cd17a96a2a06ba5afa315b6f929bebe39d0bdc054e",
+          "size": 204939,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.83",
+            "platforms": [
+              "darwin",
+              "win32",
+              "linux"
+            ],
+            "testedSurfaces": [
+              "code",
+              "settings"
+            ]
+          }
         }
       ],
       "readme": {
-        "path": "readmes/codekiln.llmdoc/1.9.0.md",
-        "sha256": "ecd68b66bf44af71cd4f6d2febd845ac837c650c2d715357cc91e89f31546509",
-        "size": 8128
+        "path": "readmes/codekiln.llmdoc/1.10.0.md",
+        "sha256": "93bc6505d643b6174ffc43f6deb4c50c78f0d2f202d7117966ab329cb62dfa5d",
+        "size": 10113
       }
     },
     {
