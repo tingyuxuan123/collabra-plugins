@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
   "marketId": "collabra",
-  "sequence": 7,
-  "generatedAt": "2026-11-25T13:10:20.222Z",
+  "sequence": 8,
+  "generatedAt": "2026-11-26T07:33:20.590Z",
   "plugins": [
     {
       "id": "codekiln.llmdoc",
@@ -84,6 +84,59 @@
         "path": "readmes/codekiln.llmdoc/1.10.0.md",
         "sha256": "93bc6505d643b6174ffc43f6deb4c50c78f0d2f202d7117966ab329cb62dfa5d",
         "size": 10113
+      }
+    },
+    {
+      "id": "codekiln.memory",
+      "name": "记忆",
+      "description": "本地长期记忆、每日日志、待办与可恢复删除；记忆、日志和待办按项目隔离，可从最左图标轨打开独立工作区。每轮自动注入参考上下文，后台自动整理默认关闭、会话总结默认开启，全部数据只存在本机。",
+      "tier": "community",
+      "category": "productivity",
+      "tags": [
+        "memory",
+        "notes",
+        "tasks",
+        "context",
+        "local-first"
+      ],
+      "license": "AGPL-3.0-only",
+      "homepage": "https://github.com/tingyuxuan123/EnsoCode/tree/main/examples/plugins/memory",
+      "icon": "media/codekiln.memory/1.1.4/icon.svg",
+      "versions": [
+        {
+          "version": "1.1.4",
+          "permissions": [
+            "agent.tool",
+            "ui.view",
+            "agent.observe",
+            "agent.intercept",
+            "agent.run",
+            "process.background",
+            "ui.notify",
+            "ui.clipboard"
+          ],
+          "path": "packages/codekiln.memory/1.1.4.zip",
+          "sha256": "49e25c6b4203e3eaa8425d495745cde2f5931a7171b36a5edf60d4fa706be7cb",
+          "size": 186757,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.109",
+            "platforms": [
+              "darwin",
+              "win32",
+              "linux"
+            ],
+            "testedSurfaces": [
+              "code"
+            ]
+          }
+        }
+      ],
+      "readme": {
+        "path": "readmes/codekiln.memory/1.1.4.md",
+        "sha256": "9642bac569d8d0a58fa70d285bbb0f243defcd428a4f48e3c806ef8e4748542f",
+        "size": 13064
       }
     },
     {
