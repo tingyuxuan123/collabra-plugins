@@ -300,6 +300,51 @@ test('README/NOTICE 只写事实：全局样式授权、无执行无网络、来
   }
 });
 
+test('memory 1.1.4：记忆以社区插件进入索引，权限、独立工作区与兼容范围可审查', () => {
+  const { plugins } = loadSourcePlugins(join(repoRoot, 'plugins'));
+  const plugin = plugins.find((item) => item.id === 'codekiln.memory');
+  assert.ok(plugin, '市场源缺少 codekiln.memory');
+  assert.equal(plugin.meta.tier, 'community');
+  assert.equal(plugin.meta.category, 'productivity');
+  assert.equal(plugin.meta.license, 'AGPL-3.0-only');
+  assert.match(plugin.meta.homepage, /^https:\/\//);
+  assert.deepEqual(
+    plugin.versions.map((item) => item.version),
+    ['1.1.4']
+  );
+  const latest = plugin.versions.find((item) => item.version === '1.1.4');
+  assert.deepEqual(latest.permissions, [
+    'agent.tool',
+    'ui.view',
+    'agent.observe',
+    'agent.intercept',
+    'agent.run',
+    'process.background',
+    'ui.notify',
+    'ui.clipboard',
+  ]);
+  // 最左图标轨工作区与宿主主题令牌同步都从 0.2.109 起可用；更早版本会退回右侧视图。
+  assert.deepEqual(latest.compatibility, {
+    host: 'collabra',
+    apiVersion: 1,
+    minAppVersion: '0.2.109',
+    platforms: ['darwin', 'win32', 'linux'],
+    testedSurfaces: ['code'],
+  });
+  const dir = versionDir('codekiln.memory', '1.1.4');
+  const manifest = readJson(join(dir, 'enso-plugin.json'));
+  assert.equal(manifest.name, '记忆');
+  assert.equal(manifest.version, '1.1.4');
+  assert.equal(manifest.icon, 'icon.svg');
+  assert.equal(manifest.views, undefined);
+  assert.deepEqual(manifest.contributes.views[0].location, 'activitybar');
+  assert.match(read(join(dir, 'LICENSE')), /GNU AFFERO/);
+  assert.ok(existsSync(join(dir, 'README.md')));
+  // 插件本体必须自包含：不随包发布测试与验证脚本。
+  assert.ok(!existsSync(join(dir, 'test')), '包内不能带测试目录');
+  assert.ok(manifest.main === 'main.mjs' && existsSync(join(dir, 'main.mjs')));
+});
+
 test('llmdoc 1.10.0：知识地图以社区插件进入索引，权限与兼容范围可审查', () => {
   const { plugins } = loadSourcePlugins(join(repoRoot, 'plugins'));
   const plugin = plugins.find((item) => item.id === 'codekiln.llmdoc');
@@ -356,10 +401,16 @@ test('构建：主题包与 llmdoc 进入索引与 media，paper 字节保持不
   const byId = new Map(result.index.plugins.map((plugin) => [plugin.id, plugin]));
   assert.deepEqual([...byId.keys()].sort(), [
     'codekiln.llmdoc',
+    'codekiln.memory',
     'collabra.nailong',
     'collabra.naiwa',
     'collabra.paper',
   ]);
+  assert.equal(
+    byId.get('codekiln.memory').icon,
+    'media/codekiln.memory/1.1.4/icon.svg',
+    'memory 图标必须随版本进入 media'
+  );
   assert.equal(
     byId.get('codekiln.llmdoc').icon,
     'media/codekiln.llmdoc/1.10.0/icon.svg',

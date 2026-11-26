@@ -1,0 +1,21 @@
+{
+  "id": "codekiln.memory",
+  "name": "记忆",
+  "description": "本地长期记忆、每日日志、待办与可恢复删除；记忆、日志和待办按项目隔离，可从最左图标轨打开独立工作区。每轮自动注入参考上下文，后台自动整理默认关闭、会话总结默认开启，全部数据只存在本机。",
+  "tier": "community",
+  "category": "productivity",
+  "tags": ["memory", "notes", "tasks", "context", "local-first"],
+  "license": "AGPL-3.0-only",
+  "homepage": "https://github.com/tingyuxuan123/EnsoCode/tree/main/examples/plugins/memory",
+  "versions": {
+    "1.1.4": {
+      "compatibility": {
+        "host": "collabra",
+        "apiVersion": 1,
+        "minAppVersion": "0.2.109",
+        "platforms": ["darwin", "win32", "linux"],
+        "testedSurfaces": ["code"]
+      }
+    }
+  }
+}
