@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
   "marketId": "collabra",
-  "sequence": 9,
-  "generatedAt": "2026-11-26T07:38:40.967Z",
+  "sequence": 10,
+  "generatedAt": "2026-11-27T08:33:23.034Z",
   "plugins": [
     {
       "id": "codekiln.llmdoc",
@@ -89,7 +89,7 @@
     {
       "id": "codekiln.memory",
       "name": "记忆",
-      "description": "本地长期记忆、每日日志、待办与可恢复删除；记忆、日志和待办按项目隔离，可从最左图标轨打开独立工作区。每轮自动注入参考上下文，后台自动整理默认关闭、会话总结默认开启，全部数据只存在本机。",
+      "description": "本地长期记忆、每日日志、待办与可恢复删除；记忆、日志和待办按项目隔离，可从最左图标轨打开独立工作区并切换已登记项目。待办有未开始/进行中/已完成三态，可放图片并直接发到同工作区会话，确认接收后由 Agent 回写完成或改写。每轮自动注入参考上下文，后台自动整理默认关闭、会话总结默认开启，全部数据只存在本机。",
       "tier": "community",
       "category": "productivity",
       "tags": [
@@ -101,7 +101,7 @@
       ],
       "license": "AGPL-3.0-only",
       "homepage": "https://github.com/tingyuxuan123/EnsoCode/tree/main/examples/plugins/memory",
-      "icon": "media/codekiln.memory/1.1.4/icon.svg",
+      "icon": "media/codekiln.memory/1.3.0/icon.svg",
       "versions": [
         {
           "version": "1.1.4",
@@ -131,12 +131,43 @@
               "code"
             ]
           }
+        },
+        {
+          "version": "1.3.0",
+          "permissions": [
+            "agent.tool",
+            "ui.view",
+            "agent.observe",
+            "agent.intercept",
+            "agent.inject",
+            "session.read",
+            "agent.run",
+            "process.background",
+            "ui.notify",
+            "ui.clipboard"
+          ],
+          "path": "packages/codekiln.memory/1.3.0.zip",
+          "sha256": "ff42c25c882bd99cd40a0735c4c276187f0531c9ad42c91a3e13673d1398cf1e",
+          "size": 241266,
+          "compatibility": {
+            "host": "collabra",
+            "apiVersion": 1,
+            "minAppVersion": "0.2.112",
+            "platforms": [
+              "darwin",
+              "win32",
+              "linux"
+            ],
+            "testedSurfaces": [
+              "code"
+            ]
+          }
         }
       ],
       "readme": {
-        "path": "readmes/codekiln.memory/1.1.4.md",
-        "sha256": "9642bac569d8d0a58fa70d285bbb0f243defcd428a4f48e3c806ef8e4748542f",
-        "size": 13064
+        "path": "readmes/codekiln.memory/1.3.0.md",
+        "sha256": "2f170d134584c11caf04321e7646cad263d878509e3cf7386143234ddc023f68",
+        "size": 16870
       }
     },
     {
