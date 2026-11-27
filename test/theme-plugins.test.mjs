@@ -310,7 +310,7 @@ test('memory 1.1.4：记忆以社区插件进入索引，权限、独立工作�
   assert.match(plugin.meta.homepage, /^https:\/\//);
   assert.deepEqual(
     plugin.versions.map((item) => item.version),
-    ['1.1.4']
+    ['1.1.4', '1.3.0']
   );
   const latest = plugin.versions.find((item) => item.version === '1.1.4');
   assert.deepEqual(latest.permissions, [
@@ -343,6 +343,47 @@ test('memory 1.1.4：记忆以社区插件进入索引，权限、独立工作�
   // 插件本体必须自包含：不随包发布测试与验证脚本。
   assert.ok(!existsSync(join(dir, 'test')), '包内不能带测试目录');
   assert.ok(manifest.main === 'main.mjs' && existsSync(join(dir, 'main.mjs')));
+});
+
+test('memory 1.3.0：项目切换与原图直发需要新宿主，权限扩大需可审查', () => {
+  const { plugins } = loadSourcePlugins(join(repoRoot, 'plugins'));
+  const plugin = plugins.find((item) => item.id === 'codekiln.memory');
+  const latest = plugin.versions.find((item) => item.version === '1.3.0');
+  assert.ok(latest, '市场源缺少 codekiln.memory 1.3.0');
+  assert.deepEqual(latest.permissions, [
+    'agent.tool',
+    'ui.view',
+    'agent.observe',
+    'agent.intercept',
+    'agent.inject',
+    'session.read',
+    'agent.run',
+    'process.background',
+    'ui.notify',
+    'ui.clipboard',
+  ]);
+  // 显式项目作用域与 worker 接收回执从 0.2.112 起才存在；旧宿主只有复制指令。
+  assert.deepEqual(latest.compatibility, {
+    host: 'collabra',
+    apiVersion: 1,
+    minAppVersion: '0.2.112',
+    platforms: ['darwin', 'win32', 'linux'],
+    testedSurfaces: ['code'],
+  });
+  const dir = versionDir('codekiln.memory', '1.3.0');
+  const manifest = readJson(join(dir, 'enso-plugin.json'));
+  assert.equal(manifest.name, '记忆');
+  assert.equal(manifest.version, '1.3.0');
+  assert.equal(manifest.engines.enso, '>=0.2.112');
+  assert.equal(manifest.icon, 'icon.svg');
+  assert.equal(manifest.contributes.views[0].location, 'activitybar');
+  assert.ok(manifest.contributes.methods.some((item) => item.name === 'send_todo'));
+  assert.ok(manifest.contributes.agentTools.some((item) => item.name === 'scratchpad'));
+  assert.match(read(join(dir, 'LICENSE')), /GNU AFFERO/);
+  assert.ok(existsSync(join(dir, 'README.md')));
+  // 图片附件实现必须随包；测试与验收脚本不能随包。
+  assert.ok(existsSync(join(dir, 'attachments.mjs')));
+  assert.ok(!existsSync(join(dir, 'test')), '包内不能带测试目录');
 });
 
 test('llmdoc 1.10.0：知识地图以社区插件进入索引，权限与兼容范围可审查', () => {
@@ -408,7 +449,7 @@ test('构建：主题包与 llmdoc 进入索引与 media，paper 字节保持不
   ]);
   assert.equal(
     byId.get('codekiln.memory').icon,
-    'media/codekiln.memory/1.1.4/icon.svg',
+    'media/codekiln.memory/1.3.0/icon.svg',
     'memory 图标必须随版本进入 media'
   );
   assert.equal(
